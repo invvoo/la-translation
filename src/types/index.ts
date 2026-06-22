@@ -12,15 +12,6 @@ export type JobStatusHistory = Database['public']['Tables']['job_status_history'
 export type EmailLog = Database['public']['Tables']['email_log']['Row']
 
 export type JobType = Job['job_type']
-export type JobStatus = string
-
-export const JOB_TYPES: Record<string, string> = {
-  translation: 'Translation',
-  interpretation: 'Interpretation',
-  equipment_rental: 'Equipment Rental',
-  notary: 'Notary / Apostille',
-  transcription: 'Transcription / Subtitling',
-}
 
 export const TRANSLATION_STATUSES = [
   'draft',
@@ -80,6 +71,21 @@ export const TRANSCRIPTION_STATUSES = [
   'complete',
   'cancelled',
 ] as const
+
+export type JobStatus =
+  | typeof TRANSLATION_STATUSES[number]
+  | typeof INTERPRETATION_STATUSES[number]
+  | typeof EQUIPMENT_RENTAL_STATUSES[number]
+  | typeof NOTARY_STATUSES[number]
+  | typeof TRANSCRIPTION_STATUSES[number]
+
+export const JOB_TYPES: Record<string, string> = {
+  translation: 'Translation',
+  interpretation: 'Interpretation',
+  equipment_rental: 'Equipment Rental',
+  notary: 'Notary / Apostille',
+  transcription: 'Transcription / Subtitling',
+}
 
 export const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',

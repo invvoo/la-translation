@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { stripe } from '@/lib/stripe/client'
+import { getStripe } from '@/lib/stripe/client'
 
 // Called daily by Vercel Cron or external scheduler
 export async function POST(req: NextRequest) {
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const transfer = await stripe.transfers.create({
+      const transfer = await getStripe().transfers.create({
         amount: Math.round(Number(invoice.amount) * 100),
         currency: 'usd',
         destination: translator.stripe_connect_id,

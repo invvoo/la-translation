@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { stripe } from '@/lib/stripe/client'
+import { getStripe } from '@/lib/stripe/client'
 
 interface Props {
   params: Promise<{ translatorId: string }>
@@ -24,7 +24,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
   let accountId = translator.stripe_connect_id
 
   if (!accountId) {
-    const account = await stripe.accounts.create({
+    const account = await getStripe().accounts.create({
       type: 'express',
       email: translator.email,
       capabilities: { transfers: { requested: true } },
@@ -37,7 +37,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
     }).eq('id', translatorId)
   }
 
-  const link = await stripe.accountLinks.create({
+  const link = await getStripe().accountLinks.create({
     account: accountId,
     refresh_url: `${process.env.NEXT_PUBLIC_SITE_URL}/admin/translators/${translatorId}`,
     return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/admin/translators/${translatorId}`,

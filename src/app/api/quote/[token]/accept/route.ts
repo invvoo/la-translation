@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/tokens'
 import { createServiceClient } from '@/lib/supabase/server'
-import { stripe } from '@/lib/stripe/client'
+import { getStripe } from '@/lib/stripe/client'
+import type Stripe from 'stripe'
 
 interface Props {
   params: Promise<{ token: string }>
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     // Get or create Stripe customer
     let stripeCustomerId = client?.stripe_customer_id
     if (!stripeCustomerId && client?.email) {
-      const customer = await stripe.customers.create({ name: client.contact_name, email: client.email })
+      const customer = await getStripe().customers.create({ name: client.contact_name, email: client.email })
       stripeCustomerId = customer.id
       await supabase.from('clients').update({ stripe_customer_id: stripeCustomerId }).eq('email', client.email)
     }
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest, { params }: Props) {
       },
     ]
 
-    const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'payment',
       customer: stripeCustomerId ?? undefined,
       customer_email: !stripeCustomerId ? client?.email : undefined,
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest, { params }: Props) {
 
     let session
     try {
-      session = await stripe.checkout.sessions.create(sessionParams)
+      session = await getStripe().checkout.sessions.create(sessionParams)
     } catch (stripeErr: any) {
       // Stored customer ID doesn't exist in this Stripe mode (test→live switch or deleted customer)
       const isStaleCustomer =
@@ -99,10 +100,10 @@ export async function POST(req: NextRequest, { params }: Props) {
         (typeof stripeErr?.message === 'string' && /no such customer/i.test(stripeErr.message))
       if (isStaleCustomer && client?.email) {
         console.log('[quote/accept] stale Stripe customer ID detected — creating fresh customer')
-        const newCustomer = await stripe.customers.create({ name: client.contact_name, email: client.email })
+        const newCustomer = await getStripe().customers.create({ name: client.contact_name, email: client.email })
         stripeCustomerId = newCustomer.id
         await supabase.from('clients').update({ stripe_customer_id: stripeCustomerId }).eq('email', client.email)
-        session = await stripe.checkout.sessions.create({ ...sessionParams, customer: stripeCustomerId, customer_email: undefined })
+        session = await getStripe().checkout.sessions.create({ ...sessionParams, customer: stripeCustomerId, customer_email: undefined })
       } else {
         throw stripeErr
       }

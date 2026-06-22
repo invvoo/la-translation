@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { stripe } from '@/lib/stripe/client'
+import { getStripe } from '@/lib/stripe/client'
 
 interface Props {
   params: Promise<{ invoiceId: string }>
@@ -27,7 +27,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
     return NextResponse.json({ error: 'Translator does not have a Stripe Connect account' }, { status: 400 })
   }
 
-  const transfer = await stripe.transfers.create({
+  const transfer = await getStripe().transfers.create({
     amount: Math.round(Number(invoice.amount) * 100),
     currency: 'usd',
     destination: translator.stripe_connect_id,

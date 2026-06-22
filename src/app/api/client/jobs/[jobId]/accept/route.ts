@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { stripe } from '@/lib/stripe/client'
+import { getStripe } from '@/lib/stripe/client'
+import type Stripe from 'stripe'
 
 interface Props { params: Promise<{ jobId: string }> }
 
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     // Get or create Stripe customer
     let stripeCustomerId = (client as any).stripe_customer_id as string | null
     if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({ name: (client as any).contact_name, email: client.email })
+      const customer = await getStripe().customers.create({ name: (client as any).contact_name, email: client.email })
       stripeCustomerId = customer.id
       await service.from('clients').update({ stripe_customer_id: stripeCustomerId } as any).eq('id', client.id)
     }
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     const origin = req.headers.get('origin') ?? req.headers.get('x-forwarded-proto')?.split(',')[0].trim() + '://' + req.headers.get('host')
     const baseUrl = origin ?? process.env.NEXT_PUBLIC_APP_URL ?? ''
 
-    const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'payment',
       customer: stripeCustomerId ?? undefined,
       customer_email: !stripeCustomerId ? (client as any).email : undefined,
@@ -86,16 +87,16 @@ export async function POST(req: NextRequest, { params }: Props) {
 
     let session
     try {
-      session = await stripe.checkout.sessions.create(sessionParams)
+      session = await getStripe().checkout.sessions.create(sessionParams)
     } catch (stripeErr: any) {
       const isStaleCustomer =
         (stripeErr?.code === 'resource_missing' && stripeErr?.param === 'customer') ||
         (typeof stripeErr?.message === 'string' && /no such customer/i.test(stripeErr.message))
       if (isStaleCustomer && (client as any).email) {
-        const newCustomer = await stripe.customers.create({ name: (client as any).contact_name, email: (client as any).email })
+        const newCustomer = await getStripe().customers.create({ name: (client as any).contact_name, email: (client as any).email })
         stripeCustomerId = newCustomer.id
         await service.from('clients').update({ stripe_customer_id: stripeCustomerId } as any).eq('id', client.id)
-        session = await stripe.checkout.sessions.create({ ...sessionParams, customer: stripeCustomerId, customer_email: undefined })
+        session = await getStripe().checkout.sessions.create({ ...sessionParams, customer: stripeCustomerId, customer_email: undefined })
       } else {
         throw stripeErr
       }
