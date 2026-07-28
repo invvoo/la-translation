@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
   if (is_active !== undefined) tableUpdates.is_active = Boolean(is_active)
 
   if (Object.keys(tableUpdates).length > 0) {
-    const { error } = await service.from('employees').update(tableUpdates).eq('id', id)
+    const { error } = await service.from('employees').update(tableUpdates as any).eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
