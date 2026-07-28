@@ -48,7 +48,7 @@ export async function DELETE(_req: NextRequest, { params }: Props) {
   if (user.id === id) return NextResponse.json({ error: 'Cannot remove yourself' }, { status: 400 })
 
   const service = createServiceClient()
-  const { error } = await service.from('employees').update({ is_active: false }).eq('id', id)
+  const { error } = await service.from('employees').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ ok: true })

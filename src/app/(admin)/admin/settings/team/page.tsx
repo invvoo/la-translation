@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Plus, Mail, Check, Pencil, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Loader2, Plus, Mail, Check, Pencil, X, ChevronUp, Trash2 } from 'lucide-react'
 
 type Employee = {
   id: string
@@ -17,13 +17,15 @@ type Employee = {
 
 // ── Edit Panel ───────────────────────────────────────────────────────────────
 
-function EditPanel({ emp, onSaved, onClose }: { emp: Employee; onSaved: () => void; onClose: () => void }) {
+function EditPanel({ emp, onSaved, onDeleted, onClose }: { emp: Employee; onSaved: () => void; onDeleted: () => void; onClose: () => void }) {
   const [fullName, setFullName] = useState(emp.full_name)
   const [email, setEmail] = useState(emp.email ?? '')
   const [role, setRole] = useState<'admin' | 'employee'>(emp.role)
   const [isActive, setIsActive] = useState(emp.is_active)
   const [password, setPassword] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -46,30 +48,42 @@ function EditPanel({ emp, onSaved, onClose }: { emp: Employee; onSaved: () => vo
     setTimeout(() => { setSaved(false); onSaved(); onClose() }, 1200)
   }
 
+  async function remove() {
+    setDeleting(true)
+    setError(null)
+    const res = await fetch(`/api/admin/employees/${emp.id}`, { method: 'DELETE' })
+    const data = await res.json()
+    setDeleting(false)
+    if (!res.ok) { setError(data.error ?? 'Delete failed'); setConfirmDelete(false); return }
+    onDeleted()
+  }
+
   return (
-    <div className="bg-gray-50 border-t border-gray-100 px-4 py-4">
+    <div className="bg-gray-50 border-t border-gray-200 px-4 py-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <div className="space-y-1">
-          <Label className="text-xs">Full Name</Label>
-          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-8 text-sm" />
+          <Label className="text-xs font-semibold text-gray-700">Full Name</Label>
+          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-8 text-sm text-gray-900" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-8 text-sm" />
+          <Label className="text-xs font-semibold text-gray-700">Email</Label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-8 text-sm text-gray-900" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Role</Label>
+          <Label className="text-xs font-semibold text-gray-700">Role</Label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as 'admin' | 'employee')}
-            className="w-full h-8 rounded-md border border-gray-300 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            className="w-full h-8 rounded-md border border-gray-300 px-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
           >
             <option value="admin">Admin</option>
             <option value="employee">Employee</option>
           </select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">New Password <span className="text-gray-400">(leave blank to keep current)</span></Label>
+          <Label className="text-xs font-semibold text-gray-700">
+            New Password <span className="font-normal text-gray-500">(leave blank to keep current)</span>
+          </Label>
           <Input
             type="password"
             value={password}
@@ -80,8 +94,8 @@ function EditPanel({ emp, onSaved, onClose }: { emp: Employee; onSaved: () => vo
         </div>
       </div>
 
-      <div className="flex items-center gap-3 mb-3">
-        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+      <div className="flex items-center gap-3 mb-4">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={isActive}
@@ -94,12 +108,36 @@ function EditPanel({ emp, onSaved, onClose }: { emp: Employee; onSaved: () => vo
 
       {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{error}</p>}
 
-      <div className="flex items-center gap-2">
-        <Button size="sm" onClick={save} disabled={saving || saved} className="gap-1.5">
-          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : saved ? <Check className="h-3.5 w-3.5" /> : null}
-          {saved ? 'Saved!' : 'Save Changes'}
-        </Button>
-        <Button size="sm" variant="outline" onClick={onClose}>Cancel</Button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={save} disabled={saving || saved} className="gap-1.5">
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : saved ? <Check className="h-3.5 w-3.5" /> : null}
+            {saved ? 'Saved!' : 'Save Changes'}
+          </Button>
+          <Button size="sm" variant="outline" onClick={onClose}>Cancel</Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {confirmDelete ? (
+            <>
+              <span className="text-xs text-gray-700 font-medium">Remove this member?</span>
+              <Button size="sm" variant="destructive" onClick={remove} disabled={deleting} className="gap-1.5 h-7">
+                {deleting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                Yes, remove
+              </Button>
+              <Button size="sm" variant="outline" className="h-7" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 h-7"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Remove
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -112,32 +150,32 @@ function EmployeeRow({ emp, onUpdated }: { emp: Employee; onUpdated: () => void 
 
   return (
     <>
-      <tr className="border-t border-gray-100">
+      <tr className="border-t border-gray-200">
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-full bg-[#1a1a2e] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
               {emp.full_name.charAt(0).toUpperCase()}
             </div>
-            <span className="font-medium text-gray-900 text-sm">{emp.full_name}</span>
+            <span className="font-semibold text-gray-900 text-sm">{emp.full_name}</span>
           </div>
         </td>
-        <td className="px-4 py-3 text-sm text-gray-600">{emp.email ?? <span className="text-gray-300">—</span>}</td>
+        <td className="px-4 py-3 text-sm font-medium text-gray-800">{emp.email ?? <span className="text-gray-400">—</span>}</td>
         <td className="px-4 py-3">
-          <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${
-            emp.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+          <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${
+            emp.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700'
           }`}>
             {emp.role === 'admin' ? 'Admin' : 'Employee'}
           </span>
         </td>
         <td className="px-4 py-3">
-          <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${
-            emp.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
+          <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${
+            emp.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
           }`}>
             {emp.is_active ? 'Active' : 'Inactive'}
           </span>
         </td>
         <td className="px-4 py-3 text-right">
-          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" onClick={() => setEditing((v) => !v)}>
+          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs font-medium text-gray-700 hover:text-gray-900" onClick={() => setEditing((v) => !v)}>
             {editing ? <ChevronUp className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
             {editing ? 'Close' : 'Edit'}
           </Button>
@@ -146,7 +184,7 @@ function EmployeeRow({ emp, onUpdated }: { emp: Employee; onUpdated: () => void 
       {editing && (
         <tr>
           <td colSpan={5} className="p-0">
-            <EditPanel emp={emp} onSaved={onUpdated} onClose={() => setEditing(false)} />
+            <EditPanel emp={emp} onSaved={onUpdated} onDeleted={onUpdated} onClose={() => setEditing(false)} />
           </td>
         </tr>
       )}
@@ -208,19 +246,19 @@ function InviteForm({ onInvited }: { onInvited: () => void }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2 space-y-1">
-          <Label className="text-xs">Full Name</Label>
-          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Smith" required className="h-8 text-sm" />
+          <Label className="text-xs font-semibold text-gray-700">Full Name</Label>
+          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Smith" required className="h-8 text-sm text-gray-900" />
         </div>
         <div className="col-span-2 space-y-1">
-          <Label className="text-xs">Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@latranslation.com" required className="h-8 text-sm" />
+          <Label className="text-xs font-semibold text-gray-700">Email</Label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@latranslation.com" required className="h-8 text-sm text-gray-900" />
         </div>
         <div className="col-span-2 space-y-1">
-          <Label className="text-xs">Role</Label>
+          <Label className="text-xs font-semibold text-gray-700">Role</Label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as 'admin' | 'employee')}
-            className="w-full h-8 rounded-md border border-gray-300 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            className="w-full h-8 rounded-md border border-gray-300 px-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
           >
             <option value="admin">Admin</option>
             <option value="employee">Employee</option>
@@ -273,10 +311,10 @@ export default function TeamPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Name</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Email</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Role</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-800">Name</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-800">Email</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-800">Role</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-800">Status</th>
                 <th className="px-4 py-3 w-20" />
               </tr>
             </thead>
