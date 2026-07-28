@@ -15,6 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .from('employees')
     .select('id')
     .eq('id', user.id)
+    .eq('is_active', true)
     .maybeSingle()
 
   if (!employee) {

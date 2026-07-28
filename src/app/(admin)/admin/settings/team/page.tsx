@@ -24,8 +24,8 @@ function EditPanel({ emp, onSaved, onDeleted, onClose }: { emp: Employee; onSave
   const [isActive, setIsActive] = useState(emp.is_active)
   const [password, setPassword] = useState('')
   const [saving, setSaving] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [toggling, setToggling] = useState(false)
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -48,13 +48,19 @@ function EditPanel({ emp, onSaved, onDeleted, onClose }: { emp: Employee; onSave
     setTimeout(() => { setSaved(false); onSaved(); onClose() }, 1200)
   }
 
-  async function remove() {
-    setDeleting(true)
+  async function toggleActive(active: boolean) {
+    setToggling(true)
     setError(null)
-    const res = await fetch(`/api/admin/employees/${emp.id}`, { method: 'DELETE' })
+    const res = active
+      ? await fetch(`/api/admin/employees/${emp.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_active: true }),
+        })
+      : await fetch(`/api/admin/employees/${emp.id}`, { method: 'DELETE' })
     const data = await res.json()
-    setDeleting(false)
-    if (!res.ok) { setError(data.error ?? 'Delete failed'); setConfirmDelete(false); return }
+    setToggling(false)
+    if (!res.ok) { setError(data.error ?? 'Failed'); setConfirmDeactivate(false); return }
     onDeleted()
   }
 
@@ -118,23 +124,36 @@ function EditPanel({ emp, onSaved, onDeleted, onClose }: { emp: Employee; onSave
         </div>
 
         <div className="flex items-center gap-2">
-          {confirmDelete ? (
-            <>
-              <span className="text-xs text-gray-700 font-medium">Remove this member?</span>
-              <Button size="sm" variant="destructive" onClick={remove} disabled={deleting} className="gap-1.5 h-7">
-                {deleting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                Yes, remove
+          {emp.is_active ? (
+            confirmDeactivate ? (
+              <>
+                <span className="text-xs text-gray-700 font-medium">Deactivate access?</span>
+                <Button size="sm" variant="destructive" onClick={() => toggleActive(false)} disabled={toggling} className="gap-1.5 h-7">
+                  {toggling ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                  Yes, deactivate
+                </Button>
+                <Button size="sm" variant="outline" className="h-7" onClick={() => setConfirmDeactivate(false)}>Cancel</Button>
+              </>
+            ) : (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="gap-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 h-7"
+                onClick={() => setConfirmDeactivate(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Deactivate
               </Button>
-              <Button size="sm" variant="outline" className="h-7" onClick={() => setConfirmDelete(false)}>Cancel</Button>
-            </>
+            )
           ) : (
             <Button
               size="sm"
               variant="ghost"
-              className="gap-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 h-7"
-              onClick={() => setConfirmDelete(true)}
+              className="gap-1.5 text-green-700 hover:text-green-800 hover:bg-green-50 h-7"
+              onClick={() => toggleActive(true)}
+              disabled={toggling}
             >
-              <Trash2 className="h-3.5 w-3.5" /> Remove
+              {toggling ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+              Reactivate
             </Button>
           )}
         </div>
