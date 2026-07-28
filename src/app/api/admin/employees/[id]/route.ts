@@ -26,13 +26,24 @@ export async function PATCH(req: NextRequest, { params }: Props) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Update email / password in auth (admin bypass — no confirmation email required)
+  // Update email / password in auth (admin bypass — no confirmation required)
   const authUpdates: Record<string, unknown> = {}
   if (email !== undefined && String(email).trim()) authUpdates.email = String(email).trim().toLowerCase()
   if (password !== undefined && String(password).trim()) authUpdates.password = String(password).trim()
 
   if (Object.keys(authUpdates).length > 0) {
-    const { error } = await (service.auth.admin as any).updateUserById(id, authUpdates)
+    const admin = (service.auth as any).admin
+
+    // Check if the auth user exists — employee rows inserted manually may have no matching auth user
+    const { data: existingUser } = await admin.getUserById(id)
+    if (!existingUser?.user) {
+      return NextResponse.json(
+        { error: 'No Supabase auth account found for this employee. Deactivate this row and use the Invite button to set up their account properly.' },
+        { status: 422 },
+      )
+    }
+
+    const { error } = await admin.updateUserById(id, authUpdates)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
