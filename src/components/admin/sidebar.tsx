@@ -7,17 +7,18 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Briefcase, Users, Languages, Package,
-  Receipt, Settings, LogOut, Globe, Menu, X,
+  Receipt, Settings, LogOut, Globe, Menu, X, UsersRound,
 } from 'lucide-react'
 
 const navItems = [
-  { href: '/admin',             label: 'Dashboard',       icon: LayoutDashboard, exact: true },
-  { href: '/admin/jobs',        label: 'Jobs',             icon: Briefcase       },
-  { href: '/admin/clients',     label: 'Clients',          icon: Users           },
-  { href: '/admin/translators', label: 'Translators',      icon: Languages       },
-  { href: '/admin/equipment',   label: 'Equipment',        icon: Package         },
-  { href: '/admin/invoices',    label: 'Invoices / Payouts', icon: Receipt       },
-  { href: '/admin/settings',    label: 'Settings',         icon: Settings        },
+  { href: '/admin',                label: 'Dashboard',          icon: LayoutDashboard, exact: true },
+  { href: '/admin/jobs',           label: 'Jobs',               icon: Briefcase       },
+  { href: '/admin/clients',        label: 'Clients',            icon: Users           },
+  { href: '/admin/translators',    label: 'Translators',        icon: Languages       },
+  { href: '/admin/equipment',      label: 'Equipment',          icon: Package         },
+  { href: '/admin/invoices',       label: 'Invoices / Payouts', icon: Receipt         },
+  { href: '/admin/settings/team',  label: 'Team',               icon: UsersRound      },
+  { href: '/admin/settings',       label: 'Settings',           icon: Settings,       exact: true },
 ]
 
 function NavContent({ onNav }: { onNav?: () => void }) {
