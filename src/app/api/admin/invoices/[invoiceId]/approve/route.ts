@@ -12,7 +12,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { error } = await service
-    .from('translator_invoices')
+    .from('translation_translator_invoices')
     .update({
       status: 'approved',
       approved_at: new Date().toISOString(),

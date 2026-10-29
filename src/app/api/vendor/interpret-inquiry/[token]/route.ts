@@ -9,8 +9,8 @@ export async function GET(_req: NextRequest, { params }: Props) {
   const service = createServiceClient()
 
   const { data: bid } = await (service as any)
-    .from('interpreter_bids')
-    .select('id, status, rate, rate_notes, translator_id, job_id, translators(full_name, email, hourly_rate), jobs(source_lang, target_lang, scheduled_at, duration_minutes, location_type, location_details, assignment_type, interpretation_mode, interpretation_cert_required, interpreter_notes)')
+    .from('translation_interpreter_bids')
+    .select('id, status, rate, rate_notes, translator_id, job_id, translation_translators(full_name, email, hourly_rate), translation_jobs(source_lang, target_lang, scheduled_at, duration_minutes, location_type, location_details, assignment_type, interpretation_mode, interpretation_cert_required, interpreter_notes)')
     .eq('token', token)
     .single() as any
 
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   const service = createServiceClient()
 
   const { data: bid } = await (service as any)
-    .from('interpreter_bids')
+    .from('translation_interpreter_bids')
     .select('id, status, job_id')
     .eq('token', token)
     .single() as any
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     return NextResponse.json({ error: 'already_assigned' }, { status: 409 })
   }
 
-  await (service as any).from('interpreter_bids').update({
+  await (service as any).from('translation_interpreter_bids').update({
     status: action,
     rate: action === 'interested' ? (rate ?? null) : null,
     rate_notes: action === 'interested' ? (rateNotes ?? null) : null,

@@ -16,8 +16,8 @@ export async function POST(_req: NextRequest, { params }: Props) {
   const service = createServiceClient()
 
   const { data: job } = await (service as any)
-    .from('jobs')
-    .select('id, job_type, status, source_lang, target_lang, word_count, deadline_at, invoice_number, po_number, ai_draft_path, vendor_accepted_at, translators:assigned_translator_id(full_name, email)')
+    .from('translation_jobs')
+    .select('id, job_type, status, source_lang, target_lang, word_count, deadline_at, invoice_number, po_number, ai_draft_path, vendor_accepted_at, translation_translators:assigned_translator_id(full_name, email)')
     .eq('id', jobId)
     .single()
 
@@ -25,13 +25,13 @@ export async function POST(_req: NextRequest, { params }: Props) {
   if (job.job_type === 'interpretation') return NextResponse.json({ error: 'Not a translation job' }, { status: 400 })
   if (job.vendor_accepted_at) return NextResponse.json({ error: 'already_accepted' }, { status: 409 })
 
-  const translator = job.translators as { full_name: string; email: string } | null
+  const translator = job.translation_translators as { full_name: string; email: string } | null
   if (!translator) return NextResponse.json({ error: 'No translator assigned' }, { status: 400 })
 
   const newToken = crypto.randomBytes(32).toString('hex')
 
   const { error: updateError } = await (service as any)
-    .from('jobs')
+    .from('translation_jobs')
     .update({ translator_acceptance_token: newToken })
     .eq('id', jobId)
 
@@ -54,9 +54,9 @@ export async function POST(_req: NextRequest, { params }: Props) {
       wordCount: job.word_count ?? undefined,
       deadlineAt: job.deadline_at ?? undefined,
       invoiceNumber: job.invoice_number ?? job.po_number ?? undefined,
-      jobPortalUrl: `${baseUrl}/vendor/jobs/${jobId}`,
-      originalDocUrl: `${baseUrl}/api/admin/jobs/${jobId}/document`,
-      aiDraftUrl: job.ai_draft_path ? `${baseUrl}/api/admin/jobs/${jobId}/document?type=draft` : undefined,
+      jobPortalUrl: `${baseUrl}/vendor/translation_jobs/${jobId}`,
+      originalDocUrl: `${baseUrl}/api/admin/translation_jobs/${jobId}/document`,
+      aiDraftUrl: job.ai_draft_path ? `${baseUrl}/api/admin/translation_jobs/${jobId}/document?type=draft` : undefined,
       acceptanceUrl,
     }))
 
@@ -67,7 +67,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
       html,
     })
 
-    await service.from('email_log').insert({
+    await service.from('translation_email_log').insert({
       job_id: jobId,
       email_type: 'translator_assigned',
       recipient: translator.email,

@@ -12,12 +12,12 @@ interface Employee {
 
 interface Props {
   jobId: string
-  employees: Employee[]
+  translation_employees: Employee[]
   currentReviewerId?: string | null
   currentReviewerName?: string | null
 }
 
-export function AssignReviewerButton({ jobId, employees, currentReviewerId, currentReviewerName }: Props) {
+export function AssignReviewerButton({ jobId, translation_employees, currentReviewerId, currentReviewerName }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -25,7 +25,7 @@ export function AssignReviewerButton({ jobId, employees, currentReviewerId, curr
   async function assign(reviewerId: string | null) {
     setLoading(true)
     setOpen(false)
-    const res = await fetch(`/api/admin/jobs/${jobId}/assign-reviewer`, {
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/assign-reviewer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reviewerId }),
@@ -70,7 +70,7 @@ export function AssignReviewerButton({ jobId, employees, currentReviewerId, curr
       </Button>
       {open && (
         <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[180px] py-1">
-          {employees.map((e) => (
+          {translation_employees.map((e) => (
             <button
               key={e.id}
               onClick={() => assign(e.id)}
@@ -79,8 +79,8 @@ export function AssignReviewerButton({ jobId, employees, currentReviewerId, curr
               {e.full_name}
             </button>
           ))}
-          {employees.length === 0 && (
-            <p className="px-3 py-2 text-xs text-gray-400">No employees found.</p>
+          {translation_employees.length === 0 && (
+            <p className="px-3 py-2 text-xs text-gray-400">No translation_employees found.</p>
           )}
         </div>
       )}

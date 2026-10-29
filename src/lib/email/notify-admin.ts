@@ -15,7 +15,7 @@ const JOB_TYPE_LABELS: Record<string, string> = {
 
 export async function notifyAdmin({ subject, jobId, message }: { subject: string; jobId?: string; message: string }) {
   if (!ADMIN_EMAIL || !process.env.RESEND_API_KEY) return
-  const adminJobUrl = jobId ? `${ADMIN_URL}/admin/jobs/${jobId}` : ADMIN_URL
+  const adminJobUrl = jobId ? `${ADMIN_URL}/admin/translation_jobs/${jobId}` : ADMIN_URL
   await getResend().emails.send({
     from: FROM_EMAIL,
     to: ADMIN_EMAIL,

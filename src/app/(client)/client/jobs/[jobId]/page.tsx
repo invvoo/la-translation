@@ -64,7 +64,7 @@ export default function ClientJobDetailPage() {
   const [acceptError, setAcceptError] = useState<string | null>(null)
 
   async function fetchJob(userEmail: string) {
-    const res = await fetch(`/api/client/jobs/${jobId}`)
+    const res = await fetch(`/api/client/translation_jobs/${jobId}`)
     if (!res.ok) { setUnauthorized(true); setLoading(false); return null }
     const data = await res.json()
     setJob(data.job)
@@ -99,7 +99,7 @@ export default function ClientJobDetailPage() {
     setAccepting(true)
     setAcceptError(null)
     try {
-      const res = await fetch(`/api/client/jobs/${jobId}/accept`, { method: 'POST' })
+      const res = await fetch(`/api/client/translation_jobs/${jobId}/accept`, { method: 'POST' })
       const data = await res.json().catch(() => ({}))
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl
@@ -122,7 +122,7 @@ export default function ClientJobDetailPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="text-center">
         <p className="text-gray-500 mb-4">Order not found or you don&apos;t have access.</p>
-        <Link href="/client/jobs" className="text-[#1a1a2e] underline text-sm">Back to my orders</Link>
+        <Link href="/client/translation_jobs" className="text-[#1a1a2e] underline text-sm">Back to my orders</Link>
       </div>
     </div>
   )
@@ -141,7 +141,7 @@ export default function ClientJobDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Link href="/client/jobs" className="text-gray-400 hover:text-gray-600">
+          <Link href="/client/translation_jobs" className="text-gray-400 hover:text-gray-600">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <span className="font-semibold text-[#1a1a2e]">Order {reference}</span>

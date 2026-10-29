@@ -38,47 +38,47 @@ export default async function JobDetailPage({ params }: Props) {
     { data: interpreterBids },
     { data: translatorBids },
   ] = await Promise.all([
-    (supabase as any).from('jobs').select('*, clients(*), translators:assigned_translator_id(*), specialty_multipliers:specialty_id(name), handler:employees!jobs_handled_by_fkey(id, full_name), reviewer:employees!jobs_reviewer_id_fkey(id, full_name)').eq('id', jobId).single(),
-    supabase.from('job_status_history').select('*').eq('job_id', jobId).order('created_at', { ascending: false }),
-    supabase.from('translator_invoices').select('*').eq('job_id', jobId).maybeSingle(),
-    user ? supabase.from('employees').select('id, full_name').eq('id', user.id).maybeSingle() : Promise.resolve({ data: null }),
-    supabase.from('employees').select('id, full_name').order('full_name'),
-    (supabase as any).from('interpreter_bids').select('id, status, rate, rate_notes, responded_at, translators:translator_id(id, full_name, email)').eq('job_id', jobId).order('created_at', { ascending: true }),
-    (supabase as any).from('interpreter_bids').select('id, status, rate_notes, responded_at, translators:translator_id(id, full_name, email)').eq('job_id', jobId).order('created_at', { ascending: true }),
+    (supabase as any).from('translation_jobs').select('*, translation_clients(*), translation_translators:assigned_translator_id(*), translation_specialty_multipliers:specialty_id(name), handler:translation_employees!jobs_handled_by_fkey(id, full_name), reviewer:translation_employees!jobs_reviewer_id_fkey(id, full_name)').eq('id', jobId).single(),
+    supabase.from('translation_job_status_history').select('*').eq('job_id', jobId).order('created_at', { ascending: false }),
+    supabase.from('translation_translator_invoices').select('*').eq('job_id', jobId).maybeSingle(),
+    user ? supabase.from('translation_employees').select('id, full_name').eq('id', user.id).maybeSingle() : Promise.resolve({ data: null }),
+    supabase.from('translation_employees').select('id, full_name').order('full_name'),
+    (supabase as any).from('translation_interpreter_bids').select('id, status, rate, rate_notes, responded_at, translation_translators:translator_id(id, full_name, email)').eq('job_id', jobId).order('created_at', { ascending: true }),
+    (supabase as any).from('translation_interpreter_bids').select('id, status, rate_notes, responded_at, translation_translators:translator_id(id, full_name, email)').eq('job_id', jobId).order('created_at', { ascending: true }),
   ])
 
   if (!job) notFound()
 
-  // Separate interpreter bids vs translator bids by job type (they share the interpreter_bids table)
-  // For translation jobs, all bids are "translator bids"; for interpretation, they're "interpreter bids"
+  // Separate interpreter bids vs translator bids by job type (they share the translation_interpreter_bids table)
+  // For translation translation_jobs, all bids are "translator bids"; for interpretation, they're "interpreter bids"
   const isTranslationJob = job.job_type === 'translation'
 
   // Resolve employee names for history entries
   const changedByIds = Array.from(new Set((history ?? []).map((h: any) => h.changed_by).filter(Boolean)))
   let employeeNames: Record<string, string> = {}
   if (changedByIds.length > 0) {
-    const { data: employees } = await supabase.from('employees').select('id, full_name').in('id', changedByIds)
-    employeeNames = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.full_name]))
+    const { data: translation_employees } = await supabase.from('translation_employees').select('id, full_name').in('id', changedByIds)
+    employeeNames = Object.fromEntries((translation_employees ?? []).map((e: any) => [e.id, e.full_name]))
   }
 
   const adminName = (adminEmployee as any)?.full_name ?? user?.email ?? 'Admin'
   const handler = (job as any).handler as { id: string; full_name: string } | null
   const reviewer = (job as any).reviewer as { id: string; full_name: string } | null
-  const employees = (allEmployees ?? []) as { id: string; full_name: string }[]
+  const translation_employees = (allEmployees ?? []) as { id: string; full_name: string }[]
   const displayAmount = job.quote_adjusted_amount ?? job.quote_amount
-  const client = job.clients as any
-  const translator = job.translators as any
-  const specialty = job.specialty_multipliers as any
+  const client = job.translation_clients as any
+  const translator = job.translation_translators as any
+  const specialty = job.translation_specialty_multipliers as any
   const documentPaths = (job as any).document_paths as { path: string; name: string }[] | null
   const originalDocs: { label: string; href: string }[] = (() => {
     if (documentPaths && documentPaths.length > 0) {
       return documentPaths.map((d, i) => ({
         label: documentPaths.length === 1 ? 'View Original' : `Doc ${i + 1}: ${d.name}`,
-        href: `/api/admin/jobs/${jobId}/document?index=${i}`,
+        href: `/api/admin/translation_jobs/${jobId}/document?index=${i}`,
       }))
     }
     if ((job as any).document_path) {
-      return [{ label: 'View Original', href: `/api/admin/jobs/${jobId}/document` }]
+      return [{ label: 'View Original', href: `/api/admin/translation_jobs/${jobId}/document` }]
     }
     return []
   })()
@@ -86,7 +86,7 @@ export default async function JobDetailPage({ params }: Props) {
   return (
     <div className="p-8 max-w-4xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin/jobs" className="text-gray-400 hover:text-gray-600">
+        <Link href="/admin/translation_jobs" className="text-gray-400 hover:text-gray-600">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="text-xl font-bold text-[#1a1a2e]">
@@ -120,7 +120,7 @@ export default async function JobDetailPage({ params }: Props) {
           <>
             <StatusActions jobId={jobId} jobType={job.job_type} status={job.status} />
             {['draft', 'quote_sent'].includes(job.status) && (
-              <Link href={`/admin/jobs/${jobId}/quote`}>
+              <Link href={`/admin/translation_jobs/${jobId}/quote`}>
                 <Button variant="outline" size="sm">Review / Edit Quote</Button>
               </Link>
             )}
@@ -134,7 +134,7 @@ export default async function JobDetailPage({ params }: Props) {
                   locationDetails={(job as any).location_details}
                   certRequired={(job as any).interpretation_cert_required}
                 />
-                <Link href={`/admin/jobs/${jobId}/assign`}>
+                <Link href={`/admin/translation_jobs/${jobId}/assign`}>
                   <Button size="sm" variant="outline">
                     <UserCheck className="h-4 w-4 mr-1" /> Assign Directly
                   </Button>
@@ -151,7 +151,7 @@ export default async function JobDetailPage({ params }: Props) {
         ))}
 
         {!translatorInvoice && ['delivered', 'complete'].includes(job.status) && (
-          <Link href={`/admin/jobs/${jobId}/invoice`}>
+          <Link href={`/admin/translation_jobs/${jobId}/invoice`}>
             <Button variant="outline" size="sm">Record Vendor Invoice</Button>
           </Link>
         )}
@@ -173,19 +173,19 @@ export default async function JobDetailPage({ params }: Props) {
               jobId={jobId}
               currentUserId={user.id}
               handler={handler}
-              employees={employees}
+              translation_employees={translation_employees}
             />
           )}
         </div>
 
-        {/* Internal reviewer — translation jobs only */}
+        {/* Internal reviewer — translation translation_jobs only */}
         {job.job_type === 'translation' && (
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <Eye className="h-4 w-4 text-gray-400 shrink-0" />
             <span className="text-sm text-gray-500 w-20 shrink-0">Reviewer</span>
             <AssignReviewerButton
               jobId={jobId}
-              employees={employees}
+              translation_employees={translation_employees}
               currentReviewerId={reviewer?.id ?? null}
               currentReviewerName={reviewer?.full_name ?? null}
             />
@@ -295,7 +295,7 @@ export default async function JobDetailPage({ params }: Props) {
                 <dt className="text-gray-500 w-24">Media File</dt>
                 <dd className="flex items-center gap-2">
                   <span className="truncate max-w-[200px]">{(job as any).media_name}</span>
-                  <a href={`/api/admin/jobs/${jobId}/document?type=media`} target="_blank" rel="noopener noreferrer"
+                  <a href={`/api/admin/translation_jobs/${jobId}/document?type=media`} target="_blank" rel="noopener noreferrer"
                     className="text-blue-600 text-xs hover:underline">Download</a>
                 </dd>
               </div>
@@ -404,7 +404,7 @@ export default async function JobDetailPage({ params }: Props) {
         )}
       </div>
 
-      {/* Translator bids — translation jobs */}
+      {/* Translator bids — translation translation_jobs */}
       {isTranslationJob && (
         <div className="mt-6">
           <TranslatorBidsPanel
@@ -415,7 +415,7 @@ export default async function JobDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Interpreter bids — interpretation jobs */}
+      {/* Interpreter bids — interpretation translation_jobs */}
       {job.job_type === 'interpretation' && (
         <div className="mt-6">
           <InterpreterBidsPanel

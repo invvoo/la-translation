@@ -169,7 +169,7 @@ export default function VendorBenefitsPage() {
         {/* Hero */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-1.5 bg-[#1a1a2e]/5 text-[#1a1a2e] text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
-            <Star className="h-3 w-3 fill-[#1a1a2e]" /> 2,000+ translators &amp; interpreters in our network
+            <Star className="h-3 w-3 fill-[#1a1a2e]" /> 2,000+ translation_translators &amp; interpreters in our network
           </div>
           <h1 className="text-5xl font-bold text-[#1a1a2e] mb-4 leading-tight">
             Work With<br />L.A. Translation
@@ -194,7 +194,7 @@ export default function VendorBenefitsPage() {
               icon: Zap,
               color: 'bg-blue-50 text-blue-600',
               title: 'Consistent work',
-              body: "Receive assignments matched to your language pairs and specialties. We've been placing translators and interpreters since 2003.",
+              body: "Receive assignments matched to your language pairs and specialties. We've been placing translation_translators and interpreters since 2003.",
             },
             {
               icon: DollarSign,

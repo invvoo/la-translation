@@ -1,15 +1,15 @@
 import type { Database } from './database'
 
-export type Job = Database['public']['Tables']['jobs']['Row']
-export type Client = Database['public']['Tables']['clients']['Row']
-export type Translator = Database['public']['Tables']['translators']['Row']
-export type Employee = Database['public']['Tables']['employees']['Row']
-export type LanguagePair = Database['public']['Tables']['language_pairs']['Row']
-export type SpecialtyMultiplier = Database['public']['Tables']['specialty_multipliers']['Row']
-export type EquipmentItem = Database['public']['Tables']['equipment_items']['Row']
-export type TranslatorInvoice = Database['public']['Tables']['translator_invoices']['Row']
-export type JobStatusHistory = Database['public']['Tables']['job_status_history']['Row']
-export type EmailLog = Database['public']['Tables']['email_log']['Row']
+export type Job = Database['public']['Tables']['translation_jobs']['Row']
+export type Client = Database['public']['Tables']['translation_clients']['Row']
+export type Translator = Database['public']['Tables']['translation_translators']['Row']
+export type Employee = Database['public']['Tables']['translation_employees']['Row']
+export type LanguagePair = Database['public']['Tables']['translation_language_pairs']['Row']
+export type SpecialtyMultiplier = Database['public']['Tables']['translation_specialty_multipliers']['Row']
+export type EquipmentItem = Database['public']['Tables']['translation_equipment_items']['Row']
+export type TranslatorInvoice = Database['public']['Tables']['translation_translator_invoices']['Row']
+export type JobStatusHistory = Database['public']['Tables']['translation_job_status_history']['Row']
+export type EmailLog = Database['public']['Tables']['translation_email_log']['Row']
 
 export type JobType = Job['job_type']
 

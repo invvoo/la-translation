@@ -44,7 +44,7 @@ function LoginContent() {
     // Verify the user is a registered employee
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const { data: employee } = await supabase.from('employees').select('id').eq('id', user.id).maybeSingle()
+      const { data: employee } = await supabase.from('translation_employees').select('id').eq('id', user.id).maybeSingle()
       if (!employee) {
         await supabase.auth.signOut()
         setPwError('Your account is not authorized to access the admin portal.')

@@ -12,14 +12,14 @@ export function ApproveVendorButtons({ translatorId }: { translatorId: string })
 
   async function handleApprove() {
     setActing('approve')
-    await fetch(`/api/admin/translators/${translatorId}/approve`, { method: 'POST' })
+    await fetch(`/api/admin/translation_translators/${translatorId}/approve`, { method: 'POST' })
     startTransition(() => router.refresh())
   }
 
   async function handleReject() {
     if (!confirm('Reject and delete this application?')) return
     setActing('reject')
-    await fetch(`/api/admin/translators/${translatorId}/approve`, { method: 'DELETE' })
+    await fetch(`/api/admin/translation_translators/${translatorId}/approve`, { method: 'DELETE' })
     startTransition(() => router.refresh())
   }
 

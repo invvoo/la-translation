@@ -28,16 +28,16 @@ export const translateJob = inngest.createFunction(
 
     // Fetch job + specialty + custom rules
     const { data: job, error: jobErr } = await service
-      .from('jobs')
-      .select('id, status, source_lang, target_lang, document_path, document_name, specialty_id, word_count, invoice_number, specialty_multipliers:specialty_id(name), clients:client_id(contact_name, email)')
+      .from('translation_jobs')
+      .select('id, status, source_lang, target_lang, document_path, document_name, specialty_id, word_count, invoice_number, translation_specialty_multipliers:specialty_id(name), translation_clients:client_id(contact_name, email)')
       .eq('id', jobId)
       .single() as any
     if (jobErr || !job) throw new Error(`Job not found: ${jobErr?.message}`)
 
-    const specialtyName = (job.specialty_multipliers as any)?.name ?? 'General'
+    const specialtyName = (job.translation_specialty_multipliers as any)?.name ?? 'General'
 
     const { data: rulesSetting } = await service
-      .from('system_settings')
+      .from('translation_system_settings')
       .select('value')
       .eq('key', 'ai_translation_rules')
       .maybeSingle()
@@ -80,13 +80,13 @@ export const translateJob = inngest.createFunction(
         })
       if (uploadError) throw new Error(`Draft upload failed: ${uploadError.message}`)
 
-      await service.from('jobs').update({
+      await service.from('translation_jobs').update({
         status: 'ai_review_pending',
         ai_draft_path: draftPath,
         ai_translation_completed_at: new Date().toISOString(),
       } as any).eq('id', jobId)
 
-      await service.from('job_status_history').insert({
+      await service.from('translation_job_status_history').insert({
         job_id: jobId,
         old_status: 'ai_translating',
         new_status: 'ai_review_pending',
@@ -95,7 +95,7 @@ export const translateJob = inngest.createFunction(
 
       // Email admin that draft is ready
       try {
-        const clientName = (job.clients as any)?.contact_name ?? 'Client'
+        const clientName = (job.translation_clients as any)?.contact_name ?? 'Client'
         const html = await renderAsync(AiDraftReadyEmail({
           jobId,
           clientName,
@@ -115,8 +115,8 @@ export const translateJob = inngest.createFunction(
 
       return { ok: true, draftPath }
     } catch (err) {
-      await service.from('jobs').update({ status: 'ai_failed' } as any).eq('id', jobId)
-      await service.from('job_status_history').insert({
+      await service.from('translation_jobs').update({ status: 'ai_failed' } as any).eq('id', jobId)
+      await service.from('translation_job_status_history').insert({
         job_id: jobId,
         old_status: 'ai_translating',
         new_status: 'ai_failed',

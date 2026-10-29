@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   const payoutDueAt = addDays(new Date(), 30)
 
   const { data, error } = await service
-    .from('translator_invoices')
+    .from('translation_translator_invoices')
     .insert({
       job_id: jobId,
       translator_id: translatorId,

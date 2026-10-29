@@ -14,15 +14,15 @@ export async function POST(_req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data: invoice } = await service
-    .from('translator_invoices')
-    .select('id, amount, status, translators(stripe_connect_id, full_name), job_id')
+    .from('translation_translator_invoices')
+    .select('id, amount, status, translation_translators(stripe_connect_id, full_name), job_id')
     .eq('id', invoiceId)
     .single()
 
   if (!invoice) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (invoice.status !== 'approved') return NextResponse.json({ error: 'Invoice not in approved state' }, { status: 409 })
 
-  const translator = invoice.translators as any
+  const translator = invoice.translation_translators as any
   if (!translator?.stripe_connect_id) {
     return NextResponse.json({ error: 'Translator does not have a Stripe Connect account' }, { status: 400 })
   }
@@ -34,7 +34,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
     transfer_group: invoice.job_id,
   })
 
-  await service.from('translator_invoices').update({
+  await service.from('translation_translator_invoices').update({
     status: 'queued',
     stripe_transfer_id: transfer.id,
   }).eq('id', invoiceId)

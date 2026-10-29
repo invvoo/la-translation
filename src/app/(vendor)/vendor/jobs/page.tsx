@@ -191,12 +191,12 @@ interface Job {
   id: string; job_type: string; status: string; source_lang: string | null
   target_lang: string | null; word_count: number | null; invoice_number: string | null
   deadline_at: string | null; assigned_at: string | null; created_at: string
-  clients: { contact_name: string } | null
+  translation_clients: { contact_name: string } | null
 }
 
 export default function VendorJobsPage() {
   const router = useRouter()
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [translation_jobs, setJobs] = useState<Job[]>([])
   const [translatorName, setTranslatorName] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -210,7 +210,7 @@ export default function VendorJobsPage() {
   }, [])
 
   useEffect(() => {
-    fetch('/api/vendor/jobs')
+    fetch('/api/vendor/translation_jobs')
       .then(async (r) => {
         const d = await r.json()
         if (!r.ok) {
@@ -222,7 +222,7 @@ export default function VendorJobsPage() {
           setError(d.message ?? 'Failed to load')
           return
         }
-        setJobs(d.jobs ?? [])
+        setJobs(d.translation_jobs ?? [])
         setTranslatorName(d.translator?.full_name ?? '')
       })
       .finally(() => setLoading(false))
@@ -235,8 +235,8 @@ export default function VendorJobsPage() {
     router.refresh()
   }
 
-  const active = jobs.filter((j) => !['delivered', 'complete'].includes(j.status))
-  const past = jobs.filter((j) => ['delivered', 'complete'].includes(j.status))
+  const active = translation_jobs.filter((j) => !['delivered', 'complete'].includes(j.status))
+  const past = translation_jobs.filter((j) => ['delivered', 'complete'].includes(j.status))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -314,10 +314,10 @@ export default function VendorJobsPage() {
           </div>
         )}
 
-        {!loading && jobs.length === 0 && !error && (
+        {!loading && translation_jobs.length === 0 && !error && (
           <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
             <FileText className="h-10 w-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">No jobs assigned yet.</p>
+            <p className="text-gray-500 text-sm">No translation_jobs assigned yet.</p>
           </div>
         )}
 
@@ -349,7 +349,7 @@ function JobCard({ job }: { job: Job }) {
   const isOverdue = deadline && deadline < new Date() && !['delivered', 'complete'].includes(job.status)
 
   return (
-    <Link href={`/vendor/jobs/${job.id}`} className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all group">
+    <Link href={`/vendor/translation_jobs/${job.id}`} className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all group">
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2 mb-1">

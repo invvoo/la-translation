@@ -20,17 +20,17 @@ async function getDashboardData(supabase: Awaited<ReturnType<typeof createClient
     { data: monthRevenue },
     { data: needsAttentionJobs },
   ] = await Promise.all([
-    supabase.from('jobs').select('id', { count: 'exact' }).not('status', 'in', '(complete,cancelled)'),
-    (supabase as any).from('jobs')
-      .select('id, job_type, status, created_at, clients(contact_name, email), quote_amount, quote_adjusted_amount, invoice_number, handler:employees!jobs_handled_by_fkey(id, full_name)')
+    supabase.from('translation_jobs').select('id', { count: 'exact' }).not('status', 'in', '(complete,cancelled)'),
+    (supabase as any).from('translation_jobs')
+      .select('id, job_type, status, created_at, translation_clients(contact_name, email), quote_amount, quote_adjusted_amount, invoice_number, handler:translation_employees!jobs_handled_by_fkey(id, full_name)')
       .order('created_at', { ascending: false })
       .limit(10),
-    supabase.from('jobs').select('id', { count: 'exact' }).eq('status', 'draft'),
-    supabase.from('translator_invoices').select('id', { count: 'exact' }).eq('status', 'approved').lte('payout_due_at', now.toISOString()),
-    supabase.from('jobs').select('quote_adjusted_amount, quote_amount').not('payment_collected_at', 'is', null).gte('payment_collected_at', startOfMonth),
+    supabase.from('translation_jobs').select('id', { count: 'exact' }).eq('status', 'draft'),
+    supabase.from('translation_translator_invoices').select('id', { count: 'exact' }).eq('status', 'approved').lte('payout_due_at', now.toISOString()),
+    supabase.from('translation_jobs').select('quote_adjusted_amount, quote_amount').not('payment_collected_at', 'is', null).gte('payment_collected_at', startOfMonth),
     // Jobs that need immediate admin action
-    (supabase as any).from('jobs')
-      .select('id, job_type, status, clients(contact_name), translated_doc_path')
+    (supabase as any).from('translation_jobs')
+      .select('id, job_type, status, translation_clients(contact_name), translated_doc_path')
       .in('status', ['draft', 'paid', 'ai_review_pending', 'ai_failed', 'in_progress'])
       .not('status', 'in', '(complete,cancelled)')
       .order('created_at', { ascending: true })
@@ -62,31 +62,31 @@ const ATTENTION_CONFIG: Record<string, { label: string; color: string; icon: Rea
     label: 'Needs Quote',
     color: 'bg-amber-100 text-amber-800 border-amber-200',
     icon: <Send className="h-3 w-3" />,
-    href: (id) => `/admin/jobs/${id}/quote`,
+    href: (id) => `/admin/translation_jobs/${id}/quote`,
   },
   paid: {
     label: 'Assign Translator',
     color: 'bg-blue-100 text-blue-800 border-blue-200',
     icon: <UserPlus className="h-3 w-3" />,
-    href: (id) => `/admin/jobs/${id}/assign`,
+    href: (id) => `/admin/translation_jobs/${id}/assign`,
   },
   ai_review_pending: {
     label: 'AI Draft Ready',
     color: 'bg-purple-100 text-purple-800 border-purple-200',
     icon: <Sparkles className="h-3 w-3" />,
-    href: (id) => `/admin/jobs/${id}/assign`,
+    href: (id) => `/admin/translation_jobs/${id}/assign`,
   },
   ai_failed: {
     label: 'AI Failed',
     color: 'bg-red-100 text-red-800 border-red-200',
     icon: <AlertTriangle className="h-3 w-3" />,
-    href: (id) => `/admin/jobs/${id}`,
+    href: (id) => `/admin/translation_jobs/${id}`,
   },
   in_progress: {
     label: 'Review Submission',
     color: 'bg-green-100 text-green-800 border-green-200',
     icon: <AlertTriangle className="h-3 w-3" />,
-    href: (id) => `/admin/jobs/${id}/review`,
+    href: (id) => `/admin/translation_jobs/${id}/review`,
   },
 }
 
@@ -95,9 +95,9 @@ export default async function AdminDashboard() {
   const { activeJobs, recentJobs, pendingQuotes, pendingPayouts, monthRevenue, attentionJobs } = await getDashboardData(supabase)
 
   const stats = [
-    { label: 'Active Jobs', value: activeJobs, href: '/admin/jobs' },
-    { label: 'Pending Quotes', value: pendingQuotes, href: '/admin/jobs?status=draft' },
-    { label: 'Revenue This Month', value: formatCurrency(monthRevenue), href: '/admin/jobs' },
+    { label: 'Active Jobs', value: activeJobs, href: '/admin/translation_jobs' },
+    { label: 'Pending Quotes', value: pendingQuotes, href: '/admin/translation_jobs?status=draft' },
+    { label: 'Revenue This Month', value: formatCurrency(monthRevenue), href: '/admin/translation_jobs' },
     { label: 'Payouts Due', value: pendingPayouts, href: '/admin/invoices' },
   ]
 
@@ -129,7 +129,7 @@ export default async function AdminDashboard() {
                 <Link key={job.id} href={cfg.href(job.id)}
                   className="flex items-center justify-between px-6 py-3 hover:bg-gray-50 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{(job.clients as any)?.contact_name ?? '—'}</p>
+                    <p className="text-sm font-medium text-gray-900">{(job.translation_clients as any)?.contact_name ?? '—'}</p>
                     <p className="text-xs text-gray-400">{JOB_TYPES[job.job_type as keyof typeof JOB_TYPES]}</p>
                   </div>
                   <span className={cn('flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border', cfg.color)}>
@@ -145,20 +145,20 @@ export default async function AdminDashboard() {
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900">Recent Jobs</h2>
-          <Link href="/admin/jobs" className="text-sm text-blue-600 hover:underline">View all</Link>
+          <Link href="/admin/translation_jobs" className="text-sm text-blue-600 hover:underline">View all</Link>
         </div>
         <div className="divide-y divide-gray-50">
           {recentJobs.length === 0 && (
-            <p className="px-6 py-8 text-center text-gray-400 text-sm">No jobs yet</p>
+            <p className="px-6 py-8 text-center text-gray-400 text-sm">No translation_jobs yet</p>
           )}
           {recentJobs.map((job: any) => {
             const handler = job.handler as { id: string; full_name: string } | null
             return (
               <div key={job.id} className="flex items-center hover:bg-gray-50 transition-colors group">
-                <Link href={`/admin/jobs/${job.id}`} className="flex items-center gap-4 px-6 py-3 flex-1 min-w-0">
+                <Link href={`/admin/translation_jobs/${job.id}`} className="flex items-center gap-4 px-6 py-3 flex-1 min-w-0">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      {(job.clients as any)?.contact_name ?? '—'}
+                      {(job.translation_clients as any)?.contact_name ?? '—'}
                     </p>
                     <p className="text-xs text-gray-500">{JOB_TYPES[job.job_type as keyof typeof JOB_TYPES]}</p>
                   </div>

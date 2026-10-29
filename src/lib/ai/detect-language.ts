@@ -116,7 +116,7 @@ export async function detectLanguageAndWordsViaClaude(buffer: Buffer, filename: 
   }
 }
 
-// Maps common AI-returned names to the canonical names used in our language_pairs table.
+// Maps common AI-returned names to the canonical names used in our translation_language_pairs table.
 const LANG_ALIASES: Record<string, string> = {
   'chinese': 'Chinese (Simplified)',
   'chinese simplified': 'Chinese (Simplified)',

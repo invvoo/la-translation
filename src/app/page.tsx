@@ -49,23 +49,23 @@ const SPECIALTIES = [
 const CLIENT_CATEGORIES = [
   {
     label: 'Entertainment & Media',
-    clients: 'CBS · Fox · DreamWorks · Columbia Pictures · NBCUniversal',
+    translation_clients: 'CBS · Fox · DreamWorks · Columbia Pictures · NBCUniversal',
   },
   {
     label: 'Law Firms',
-    clients: 'Baker & McKenzie · Sullivan & Cromwell · McDermott Will & Emery · Sheppard Mullin',
+    translation_clients: 'Baker & McKenzie · Sullivan & Cromwell · McDermott Will & Emery · Sheppard Mullin',
   },
   {
     label: 'Healthcare & Academic',
-    clients: 'UCLA · USC · Cedar Sinai · City of Hope · Good Samaritan',
+    translation_clients: 'UCLA · USC · Cedar Sinai · City of Hope · Good Samaritan',
   },
   {
     label: 'Government & International',
-    clients: 'FBI · LA Superior Court · DHS · SEC · United Nations · UNICEF · OECD',
+    translation_clients: 'FBI · LA Superior Court · DHS · SEC · United Nations · UNICEF · OECD',
   },
   {
     label: 'Corporations',
-    clients: 'Johnson & Johnson · Pfizer · and hundreds more',
+    translation_clients: 'Johnson & Johnson · Pfizer · and hundreds more',
   },
 ]
 
@@ -90,7 +90,7 @@ export default function HomePage() {
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm text-gray-600">
             <a href="#services" className="hover:text-[#1a1a2e]">Services</a>
-            <a href="#clients" className="hover:text-[#1a1a2e]">Clients</a>
+            <a href="#translation_clients" className="hover:text-[#1a1a2e]">Clients</a>
             <a href="#contact" className="hover:text-[#1a1a2e]">Contact</a>
             <a href="tel:2133857781" className="flex items-center gap-1.5 text-[#1a1a2e] font-medium hover:underline">
               <Phone className="h-3.5 w-3.5" />(213) 385-7781
@@ -249,7 +249,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold text-[#1a1a2e]">Translation Specialties</h2>
-            <p className="text-gray-500 mt-2 text-sm">Specialized translators for every industry and document type</p>
+            <p className="text-gray-500 mt-2 text-sm">Specialized translation_translators for every industry and document type</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {SPECIALTIES.map((sp) => (
@@ -302,7 +302,7 @@ export default function HomePage() {
       </section>
 
       {/* Clients */}
-      <section id="clients" className="py-16 px-6 bg-[#1a1a2e] text-white">
+      <section id="translation_clients" className="py-16 px-6 bg-[#1a1a2e] text-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold">Trusted By Leading Organizations</h2>
@@ -312,7 +312,7 @@ export default function HomePage() {
             {CLIENT_CATEGORIES.map((cat) => (
               <div key={cat.label} className="bg-white/5 rounded-xl border border-white/10 p-5">
                 <p className="font-semibold text-blue-300 text-xs uppercase tracking-wide mb-2">{cat.label}</p>
-                <p className="text-gray-300 text-sm">{cat.clients}</p>
+                <p className="text-gray-300 text-sm">{cat.translation_clients}</p>
               </div>
             ))}
           </div>
@@ -326,7 +326,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-5">
             {[
               { title: 'USCIS & Court Accepted', body: 'All certified translations are notarized, sealed, and stamped — accepted by USCIS, courts, and government agencies worldwide.' },
-              { title: 'Certified Professionals', body: 'Court-certified interpreters and National Board / CCHI-certified medical interpreters. MA/PhD translators for patent work.' },
+              { title: 'Certified Professionals', body: 'Court-certified interpreters and National Board / CCHI-certified medical interpreters. MA/PhD translation_translators for patent work.' },
               { title: 'Documents Kept on File', body: 'Your translations are stored on file for 3 years, making re-ordering fast and simple.' },
               { title: 'Apostille Service', body: 'Full apostille certification for international document use. Bundled with certified translation for a complete package.' },
               { title: 'Conference Equipment', body: 'Full simultaneous interpretation equipment rental: transmitters, receivers, booths, and on-site technician support.' },

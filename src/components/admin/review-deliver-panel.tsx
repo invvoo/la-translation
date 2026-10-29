@@ -18,10 +18,10 @@ export function ReviewDeliverPanel({ jobId }: Props) {
   async function sendToClient() {
     if (!confirm('Send this translation to the client? This will email them a secure download link.')) return
     setSending(true)
-    const res = await fetch(`/api/admin/jobs/${jobId}/deliver-vendor`, { method: 'POST' })
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/deliver-vendor`, { method: 'POST' })
     if (res.ok) {
       setSent(true)
-      router.push(`/admin/jobs/${jobId}`)
+      router.push(`/admin/translation_jobs/${jobId}`)
     } else {
       const d = await res.json().catch(() => ({}))
       alert(d.error ?? 'Failed to send. Please try again.')
@@ -54,7 +54,7 @@ export function ReviewDeliverPanel({ jobId }: Props) {
             ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
             : <><CheckCircle2 className="h-4 w-4 mr-1.5" /> Approved — Send to Client</>}
         </Button>
-        <Link href={`/admin/jobs/${jobId}/deliver`}>
+        <Link href={`/admin/translation_jobs/${jobId}/deliver`}>
           <Button variant="outline">
             <Upload className="h-4 w-4 mr-1.5" /> Upload Different File Instead
           </Button>

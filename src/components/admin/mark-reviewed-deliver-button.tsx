@@ -17,9 +17,9 @@ export function MarkReviewedDeliverButton({ jobId, label = 'Mark Reviewed & Send
   async function handle() {
     if (!confirm('This will mark the document as reviewed and send a delivery email to the client. Continue?')) return
     setLoading(true)
-    const res = await fetch(`/api/admin/jobs/${jobId}/mark-reviewed-deliver`, { method: 'POST' })
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/mark-reviewed-deliver`, { method: 'POST' })
     if (res.ok) {
-      router.push(`/admin/jobs/${jobId}`)
+      router.push(`/admin/translation_jobs/${jobId}`)
     } else {
       const d = await res.json().catch(() => ({}))
       alert(d.error ?? 'Failed. Please try again.')

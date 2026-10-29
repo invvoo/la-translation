@@ -4,7 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getResend, FROM_EMAIL } from '@/lib/email/client'
 import { JobConfirmedEmail } from '@/lib/email/templates/job-confirmed'
 import { render as renderAsync } from '@react-email/components'
-import { triggerPostPaymentActions } from '@/lib/jobs/post-payment'
+import { triggerPostPaymentActions } from '@/lib/translation_jobs/post-payment'
 
 export const maxDuration = 300
 
@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
 
     // Idempotency check
     const { data: job, error: jobError } = await supabase
-      .from('jobs')
-      .select('*, specialty_multipliers:specialty_id(name), clients(contact_name, email)')
+      .from('translation_jobs')
+      .select('*, translation_specialty_multipliers:specialty_id(name), translation_clients(contact_name, email)')
       .eq('id', jobId)
       .single() as any
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     // Update job to paid
     const { error: updateError } = await supabase
-      .from('jobs')
+      .from('translation_jobs')
       .update({
         status: 'paid',
         stripe_checkout_session_id: session.id,
@@ -69,15 +69,15 @@ export async function POST(req: NextRequest) {
 
     console.log('[webhook] job update result', { jobId, invoiceNumber, error: updateError?.message })
 
-    await supabase.from('job_status_history').insert({ job_id: jobId, old_status: job.status, new_status: 'paid', note: `Payment received — ${invoiceNumber}` })
+    await supabase.from('translation_job_status_history').insert({ job_id: jobId, old_status: job.status, new_status: 'paid', note: `Payment received — ${invoiceNumber}` })
 
-    const client = job.clients as any
+    const client = job.translation_clients as any
     const amount = Number(job.quote_adjusted_amount ?? job.quote_amount)
 
     // Send confirmation email to client
     if (client?.email) {
       try {
-        const specialty = job.specialty_multipliers as any
+        const specialty = job.translation_specialty_multipliers as any
         const html = await renderAsync(JobConfirmedEmail({
           clientName: client.contact_name,
           jobType: job.job_type,
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
           html,
         })
 
-        await supabase.from('email_log').insert({
+        await supabase.from('translation_email_log').insert({
           job_id: jobId,
           email_type: 'job_confirmed',
           recipient: client.email,
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
   if (event.type === 'transfer.created') {
     const transfer = event.data.object as any
     await supabase
-      .from('translator_invoices')
+      .from('translation_translator_invoices')
       .update({ stripe_transfer_id: transfer.id, status: 'paid', paid_at: new Date().toISOString() })
       .eq('stripe_transfer_id', transfer.id)
   }
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
   if ((event.type as string) === 'transfer.failed') {
     const transfer = (event.data as any).object
     await supabase
-      .from('translator_invoices')
+      .from('translation_translator_invoices')
       .update({ status: 'failed' })
       .eq('stripe_transfer_id', transfer.id)
   }

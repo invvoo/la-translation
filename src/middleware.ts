@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
   }
   if (pathname === '/client/login' && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/client/jobs'
+    url.pathname = '/client/translation_jobs'
     return NextResponse.redirect(url)
   }
 
@@ -65,7 +65,7 @@ export async function middleware(request: NextRequest) {
   }
   if (pathname === '/vendor/login' && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/vendor/jobs'
+    url.pathname = '/vendor/translation_jobs'
     return NextResponse.redirect(url)
   }
 

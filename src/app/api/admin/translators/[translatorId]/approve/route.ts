@@ -11,7 +11,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { error } = await service
-    .from('translators')
+    .from('translation_translators')
     .update({ is_active: true } as any)
     .eq('id', translatorId)
 
@@ -27,7 +27,7 @@ export async function DELETE(_req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { error } = await service
-    .from('translators')
+    .from('translation_translators')
     .delete()
     .eq('id', translatorId)
 

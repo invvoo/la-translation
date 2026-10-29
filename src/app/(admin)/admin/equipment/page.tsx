@@ -15,7 +15,7 @@ export default function EquipmentPage() {
   const [saving, setSaving] = useState(false)
 
   async function load() {
-    const { data } = await createClient().from('equipment_items').select('*').order('name')
+    const { data } = await createClient().from('translation_equipment_items').select('*').order('name')
     setItems(data ?? [])
   }
   useEffect(() => { load() }, [])
@@ -25,7 +25,7 @@ export default function EquipmentPage() {
     setSaving(true)
     const supabase = createClient()
     const qty = parseInt(form.quantity_total, 10)
-    await supabase.from('equipment_items').insert({
+    await supabase.from('translation_equipment_items').insert({
       name: form.name,
       description: form.description || null,
       quantity_total: qty,
@@ -40,7 +40,7 @@ export default function EquipmentPage() {
   }
 
   async function toggleActive(id: string, current: boolean) {
-    await createClient().from('equipment_items').update({ is_active: !current }).eq('id', id)
+    await createClient().from('translation_equipment_items').update({ is_active: !current }).eq('id', id)
     load()
   }
 

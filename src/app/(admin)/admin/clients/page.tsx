@@ -4,8 +4,8 @@ import Link from 'next/link'
 
 export default async function ClientsPage() {
   const supabase = await createClient()
-  const { data: clients } = await supabase
-    .from('clients')
+  const { data: translation_clients } = await supabase
+    .from('translation_clients')
     .select('id, contact_name, email, phone, company_name, created_at')
     .order('created_at', { ascending: false })
 
@@ -25,7 +25,7 @@ export default async function ClientsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {(clients ?? []).map((c) => (
+            {(translation_clients ?? []).map((c) => (
               <tr key={c.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium text-gray-900">{c.contact_name}</td>
                 <td className="px-4 py-3 text-gray-600">
@@ -34,12 +34,12 @@ export default async function ClientsPage() {
                 <td className="px-4 py-3 text-gray-500">{c.company_name ?? '—'}</td>
                 <td className="px-4 py-3 text-right text-gray-400">{formatDate(c.created_at)}</td>
                 <td className="px-4 py-3 text-right">
-                  <Link href={`/admin/clients/${c.id}`} className="text-xs text-blue-600 hover:underline">Jobs</Link>
+                  <Link href={`/admin/translation_clients/${c.id}`} className="text-xs text-blue-600 hover:underline">Jobs</Link>
                 </td>
               </tr>
             ))}
-            {(clients ?? []).length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">No clients yet</td></tr>
+            {(translation_clients ?? []).length === 0 && (
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">No translation_clients yet</td></tr>
             )}
           </tbody>
         </table>

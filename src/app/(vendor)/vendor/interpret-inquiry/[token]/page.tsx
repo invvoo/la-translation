@@ -31,8 +31,8 @@ interface BidData {
   status: BidStatus
   rate: number | null
   rate_notes: string | null
-  translators: { full_name: string; email: string; hourly_rate: number | null }
-  jobs: {
+  translation_translators: { full_name: string; email: string; hourly_rate: number | null }
+  translation_jobs: {
     source_lang: string
     target_lang: string
     scheduled_at: string | null
@@ -73,7 +73,7 @@ export default function InterpreterBidPage() {
             setPageState('done_declined')
           } else {
             // Pre-fill rate: use existing bid rate if re-visiting, else translator's base hourly rate
-            const prefill = data.bid.rate ?? data.bid.translators?.hourly_rate
+            const prefill = data.bid.rate ?? data.bid.translation_translators?.hourly_rate
             if (prefill != null) setRate(String(prefill))
             setPageState('ready')
             if (autoDecline) setShowDeclineConfirm(true)
@@ -106,7 +106,7 @@ export default function InterpreterBidPage() {
     }
   }
 
-  const job = bid?.jobs
+  const job = bid?.translation_jobs
 
   const scheduledFormatted = job?.scheduled_at
     ? new Date(job.scheduled_at).toLocaleDateString('en-US', {
@@ -155,7 +155,7 @@ export default function InterpreterBidPage() {
           <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900 mb-2">Interest Confirmed!</h1>
           <p className="text-gray-500 text-sm mb-4">
-            Thank you, {bid?.translators?.full_name}. We have noted your availability and rate.
+            Thank you, {bid?.translation_translators?.full_name}. We have noted your availability and rate.
             Our team will contact you shortly if you are selected for this assignment.
           </p>
           {bid?.rate != null && (
@@ -193,7 +193,7 @@ export default function InterpreterBidPage() {
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-4">
           <h1 className="text-xl font-bold text-[#1a1a2e] mb-1">Interpretation Inquiry</h1>
           <p className="text-gray-500 text-sm mb-5">
-            Hi {bid?.translators?.full_name}, please review the details below and let us know if you&apos;re available.
+            Hi {bid?.translation_translators?.full_name}, please review the details below and let us know if you&apos;re available.
           </p>
 
           {/* Job details */}

@@ -17,8 +17,8 @@ export default async function InvoicesPage() {
   const supabase = await createClient()
 
   const { data: invoices } = await supabase
-    .from('translator_invoices')
-    .select('*, translators(full_name, email, stripe_connect_id, payment_method, payment_details), jobs(invoice_number, job_type, clients(contact_name))')
+    .from('translation_translator_invoices')
+    .select('*, translation_translators(full_name, email, stripe_connect_id, payment_method, payment_details), translation_jobs(invoice_number, job_type, translation_clients(contact_name))')
     .in('status', ['submitted', 'approved', 'queued', 'paid', 'failed'])
     .order('created_at', { ascending: true })
 
@@ -49,7 +49,7 @@ export default async function InvoicesPage() {
             </thead>
             <tbody className="divide-y divide-amber-100">
               {submitted.map((inv: any) => {
-                const t = inv.translators ?? {}
+                const t = inv.translation_translators ?? {}
                 const method = t.payment_method ?? 'check'
                 const badge = METHOD_BADGE[method] ?? METHOD_BADGE.other
                 return (
@@ -62,8 +62,8 @@ export default async function InvoicesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {inv.jobs?.invoice_number ?? inv.job_id?.slice(0, 8)}
-                      <p className="text-xs text-gray-400">{inv.jobs?.clients?.contact_name}</p>
+                      {inv.translation_jobs?.invoice_number ?? inv.job_id?.slice(0, 8)}
+                      <p className="text-xs text-gray-400">{inv.translation_jobs?.translation_clients?.contact_name}</p>
                     </td>
                     <td className="px-4 py-3 text-right font-medium">{formatCurrency(Number(inv.amount))}</td>
                     <td className="px-4 py-3 text-right">
@@ -98,7 +98,7 @@ export default async function InvoicesPage() {
             <tbody className="divide-y divide-gray-50">
               {pending.map((inv: any) => {
                 const isDue = inv.payout_due_at && new Date(inv.payout_due_at) <= now
-                const t = inv.translators ?? {}
+                const t = inv.translation_translators ?? {}
                 const method = t.payment_method ?? 'check'
                 const badge = METHOD_BADGE[method] ?? METHOD_BADGE.other
                 return (
@@ -111,8 +111,8 @@ export default async function InvoicesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {inv.jobs?.invoice_number ?? inv.job_id.slice(0, 8)}
-                      <p className="text-xs text-gray-400">{inv.jobs?.clients?.contact_name}</p>
+                      {inv.translation_jobs?.invoice_number ?? inv.job_id.slice(0, 8)}
+                      <p className="text-xs text-gray-400">{inv.translation_jobs?.translation_clients?.contact_name}</p>
                     </td>
                     <td className="px-4 py-3 text-right font-medium">{formatCurrency(Number(inv.amount))}</td>
                     <td className="px-4 py-3 text-right">
@@ -162,8 +162,8 @@ export default async function InvoicesPage() {
             <tbody className="divide-y divide-gray-50">
               {others.map((inv: any) => (
                 <tr key={inv.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{inv.translators?.full_name}</td>
-                  <td className="px-4 py-3 text-gray-600">{inv.jobs?.invoice_number ?? inv.job_id.slice(0, 8)}</td>
+                  <td className="px-4 py-3 font-medium">{inv.translation_translators?.full_name}</td>
+                  <td className="px-4 py-3 text-gray-600">{inv.translation_jobs?.invoice_number ?? inv.job_id.slice(0, 8)}</td>
                   <td className="px-4 py-3 text-right">{formatCurrency(Number(inv.amount))}</td>
                   <td className="px-4 py-3 text-right capitalize">
                     <span className={inv.status === 'paid' ? 'text-green-600 font-medium' : inv.status === 'failed' ? 'text-red-600' : 'text-gray-600'}>

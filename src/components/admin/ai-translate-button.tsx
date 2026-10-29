@@ -13,7 +13,7 @@ export function AiTranslateButton({ jobId, label = 'Run AI Translation' }: { job
   async function handleClick() {
     setLoading(true)
     setError(null)
-    const res = await fetch(`/api/admin/jobs/${jobId}/ai-translate`, { method: 'POST' })
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/ai-translate`, { method: 'POST' })
     const data = await res.json()
     setLoading(false)
     if (!res.ok) {

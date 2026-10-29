@@ -22,7 +22,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   const service = createServiceClient()
 
   const { data: translator } = await service
-    .from('translators')
+    .from('translation_translators')
     .select('id')
     .eq('email', user.email)
     .eq('is_active', true)
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   if (!translator) return NextResponse.json({ error: 'No active vendor account' }, { status: 403 })
 
   const { data: job } = await (service as any)
-    .from('jobs')
+    .from('translation_jobs')
     .select('id, status, job_type, vendor_confirmed_rate')
     .eq('id', jobId)
     .eq('assigned_translator_id', translator.id)
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest, { params }: Props) {
 
   // Check no invoice already submitted
   const { data: existing } = await service
-    .from('translator_invoices')
+    .from('translation_translator_invoices')
     .select('id')
     .eq('job_id', jobId)
     .maybeSingle()
@@ -67,13 +67,13 @@ export async function POST(req: NextRequest, { params }: Props) {
 
   // Record overtime flag on the job if interpreter is requesting it
   if (isInterpreter && parsed.data.overtimeRequested) {
-    await (service as any).from('jobs').update({
+    await (service as any).from('translation_jobs').update({
       vendor_overtime_requested: true,
       vendor_overtime_notes: parsed.data.overtimeNotes ?? null,
     }).eq('id', jobId)
   }
 
-  const { error } = await service.from('translator_invoices').insert({
+  const { error } = await service.from('translation_translator_invoices').insert({
     job_id: jobId,
     translator_id: translator.id,
     amount: parsed.data.amount,

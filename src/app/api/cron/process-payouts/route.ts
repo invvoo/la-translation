@@ -11,8 +11,8 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient()
   const { data: dueInvoices } = await supabase
-    .from('translator_invoices')
-    .select('id, amount, job_id, translators(stripe_connect_id, full_name)')
+    .from('translation_translator_invoices')
+    .select('id, amount, job_id, translation_translators(stripe_connect_id, full_name)')
     .eq('status', 'approved')
     .lte('payout_due_at', new Date().toISOString())
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   const errors: string[] = []
 
   for (const invoice of dueInvoices) {
-    const translator = invoice.translators as any
+    const translator = invoice.translation_translators as any
     if (!translator?.stripe_connect_id) {
       errors.push(`Invoice ${invoice.id}: translator has no Stripe Connect account`)
       continue
@@ -39,14 +39,14 @@ export async function POST(req: NextRequest) {
       })
 
       await supabase
-        .from('translator_invoices')
+        .from('translation_translator_invoices')
         .update({ status: 'queued', stripe_transfer_id: transfer.id })
         .eq('id', invoice.id)
 
       processed++
     } catch (err) {
       errors.push(`Invoice ${invoice.id}: ${String(err)}`)
-      await supabase.from('translator_invoices').update({ status: 'failed' }).eq('id', invoice.id)
+      await supabase.from('translation_translator_invoices').update({ status: 'failed' }).eq('id', invoice.id)
     }
   }
 

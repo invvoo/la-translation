@@ -11,12 +11,12 @@ interface BidData {
   id: string
   status: 'pending' | 'interested' | 'declined' | 'assigned'
   rate_notes: string | null
-  translators: { full_name: string; email: string }
-  jobs: {
+  translation_translators: { full_name: string; email: string }
+  translation_jobs: {
     source_lang: string
     target_lang: string
     word_count: number | null
-    specialty_multipliers: { name: string } | null
+    translation_specialty_multipliers: { name: string } | null
     document_name: string | null
   }
 }
@@ -73,7 +73,7 @@ export default function TranslationInquiryPage() {
     }
   }
 
-  const job = bid?.jobs
+  const job = bid?.translation_jobs
 
   if (pageState === 'loading') {
     return (
@@ -115,7 +115,7 @@ export default function TranslationInquiryPage() {
           <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900 mb-2">Availability Confirmed!</h1>
           <p className="text-gray-500 text-sm mb-4">
-            Thank you, {bid?.translators?.full_name}. We have noted your availability and will be in touch shortly if you are selected for this job.
+            Thank you, {bid?.translation_translators?.full_name}. We have noted your availability and will be in touch shortly if you are selected for this job.
           </p>
           <p className="text-sm text-gray-400 mt-4">Questions? Call <a href="tel:2133857781" className="text-blue-600">(213) 385-7781</a></p>
         </div>
@@ -149,7 +149,7 @@ export default function TranslationInquiryPage() {
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-4">
           <h1 className="text-xl font-bold text-[#1a1a2e] mb-1">Translation Job Inquiry</h1>
           <p className="text-gray-500 text-sm mb-5">
-            Hi {bid?.translators?.full_name}, please review the job details below and let us know if you&apos;re available.
+            Hi {bid?.translation_translators?.full_name}, please review the job details below and let us know if you&apos;re available.
           </p>
 
           <div className="bg-gray-50 rounded-lg p-4 space-y-3 mb-6 text-sm">
@@ -169,14 +169,14 @@ export default function TranslationInquiryPage() {
                 </div>
               </div>
             )}
-            {job?.specialty_multipliers?.name && (
+            {job?.translation_specialty_multipliers?.name && (
               <div className="flex items-start gap-2.5">
                 <div className="h-4 w-4 mt-0.5 shrink-0 flex items-center justify-center">
                   <span className="text-gray-400 text-xs">📋</span>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Specialty</p>
-                  <p className="font-medium">{job.specialty_multipliers.name}</p>
+                  <p className="font-medium">{job.translation_specialty_multipliers.name}</p>
                 </div>
               </div>
             )}

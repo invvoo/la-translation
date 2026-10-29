@@ -19,7 +19,7 @@ export default function DeliverPage() {
   const [source, setSource] = useState<Source>('upload')
 
   useEffect(() => {
-    fetch(`/api/admin/jobs/${jobId}/vendor-submission-check`)
+    fetch(`/api/admin/translation_jobs/${jobId}/vendor-submission-check`)
       .then(async (r) => {
         if (r.ok) {
           const d = await r.json()
@@ -37,9 +37,9 @@ export default function DeliverPage() {
     setSubmitting(true)
 
     if (source === 'vendor') {
-      const res = await fetch(`/api/admin/jobs/${jobId}/deliver-vendor`, { method: 'POST' })
+      const res = await fetch(`/api/admin/translation_jobs/${jobId}/deliver-vendor`, { method: 'POST' })
       if (res.ok) {
-        router.push(`/admin/jobs/${jobId}`)
+        router.push(`/admin/translation_jobs/${jobId}`)
       } else {
         const d = await res.json().catch(() => ({}))
         alert(d.error ?? 'Failed. Please try again.')
@@ -49,9 +49,9 @@ export default function DeliverPage() {
     }
 
     if (source === 'ai_draft') {
-      const res = await fetch(`/api/admin/jobs/${jobId}/mark-reviewed-deliver`, { method: 'POST' })
+      const res = await fetch(`/api/admin/translation_jobs/${jobId}/mark-reviewed-deliver`, { method: 'POST' })
       if (res.ok) {
-        router.push(`/admin/jobs/${jobId}`)
+        router.push(`/admin/translation_jobs/${jobId}`)
       } else {
         const d = await res.json().catch(() => ({}))
         alert(d.error ?? 'Failed. Please try again.')
@@ -64,9 +64,9 @@ export default function DeliverPage() {
     if (!file) { setSubmitting(false); return }
     const formData = new FormData()
     formData.append('translatedFile', file)
-    const res = await fetch(`/api/admin/jobs/${jobId}/deliver`, { method: 'POST', body: formData })
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/deliver`, { method: 'POST', body: formData })
     if (res.ok) {
-      router.push(`/admin/jobs/${jobId}`)
+      router.push(`/admin/translation_jobs/${jobId}`)
     } else {
       alert('Upload failed. Please try again.')
       setSubmitting(false)
@@ -78,7 +78,7 @@ export default function DeliverPage() {
   return (
     <div className="p-8 max-w-xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href={`/admin/jobs/${jobId}`} className="text-gray-400 hover:text-gray-600">
+        <Link href={`/admin/translation_jobs/${jobId}`} className="text-gray-400 hover:text-gray-600">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="text-xl font-bold text-[#1a1a2e]">Deliver to Client</h1>
@@ -105,7 +105,7 @@ export default function DeliverPage() {
                   <p className="text-xs font-normal text-gray-400">File submitted by the assigned translator</p>
                 </div>
                 <a
-                  href={`/api/admin/jobs/${jobId}/document?type=translated`}
+                  href={`/api/admin/translation_jobs/${jobId}/document?type=translated`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
@@ -128,7 +128,7 @@ export default function DeliverPage() {
                   <p className="text-xs font-normal text-gray-400">Auto-translated — review before sending</p>
                 </div>
                 <a
-                  href={`/api/admin/jobs/${jobId}/document?type=draft`}
+                  href={`/api/admin/translation_jobs/${jobId}/document?type=draft`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}

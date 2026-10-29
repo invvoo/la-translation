@@ -86,7 +86,7 @@ export default function TranscriptionPage() {
 
     try {
       // Step 1: get signed upload URL
-      const urlRes = await fetch('/api/jobs/transcription/upload-url', {
+      const urlRes = await fetch('/api/translation_jobs/transcription/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: file.name, contentType: file.type || 'application/octet-stream' }),
@@ -116,7 +116,7 @@ export default function TranscriptionPage() {
       setUploadProgress(100)
 
       // Step 3: create job record
-      const jobRes = await fetch('/api/jobs/transcription', {
+      const jobRes = await fetch('/api/translation_jobs/transcription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

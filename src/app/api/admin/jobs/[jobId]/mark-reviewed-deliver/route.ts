@@ -15,8 +15,8 @@ export async function POST(_req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data: job } = await (service as any)
-    .from('jobs')
-    .select('id, status, job_type, source_lang, target_lang, invoice_number, document_name, translated_doc_path, ai_draft_path, document_path, clients(contact_name, email)')
+    .from('translation_jobs')
+    .select('id, status, job_type, source_lang, target_lang, invoice_number, document_name, translated_doc_path, ai_draft_path, document_path, translation_clients(contact_name, email)')
     .eq('id', jobId)
     .single()
 
@@ -29,7 +29,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
   const now = new Date().toISOString()
   const deliveryToken = await signToken({ jobId, type: 'delivery' }, '30d')
 
-  const { error: updateError } = await (service as any).from('jobs').update({
+  const { error: updateError } = await (service as any).from('translation_jobs').update({
     translated_doc_path: docPath,
     reviewed_at: now,
     reviewer_id: user.id,
@@ -43,7 +43,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
     return NextResponse.json({ error: updateError.message }, { status: 500 })
   }
 
-  await service.from('job_status_history').insert({
+  await service.from('translation_job_status_history').insert({
     job_id: jobId,
     old_status: job.status,
     new_status: 'complete',
@@ -51,7 +51,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
     note: 'Marked reviewed by admin and delivered to client',
   })
 
-  const client = job.clients as any
+  const client = job.translation_clients as any
   if (client?.email) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? ''
     try {
@@ -71,7 +71,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
         html,
       })
 
-      await service.from('email_log').insert({
+      await service.from('translation_email_log').insert({
         job_id: jobId,
         email_type: 'delivery',
         recipient: client.email,
@@ -80,7 +80,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
         status: emailError ? 'failed' : 'sent',
       } as any)
 
-      await (service as any).from('jobs').update({ delivery_email_sent_at: now }).eq('id', jobId)
+      await (service as any).from('translation_jobs').update({ delivery_email_sent_at: now }).eq('id', jobId)
     } catch (err) {
       console.error('[mark-reviewed-deliver] email failed (non-fatal):', err)
     }

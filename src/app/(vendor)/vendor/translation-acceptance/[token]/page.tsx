@@ -18,7 +18,7 @@ interface JobData {
   invoice_number: string | null
   vendor_confirmed_rate: number | null
   vendor_accepted_at: string | null
-  translators: { full_name: string; email: string; per_word_rate: number | null } | null
+  translation_translators: { full_name: string; email: string; per_word_rate: number | null } | null
 }
 
 type PageState = 'loading' | 'ready' | 'submitting' | 'done' | 'already_accepted' | 'error'
@@ -42,7 +42,7 @@ export default function TranslationAcceptancePage() {
             setConfirmedRate(data.job.vendor_confirmed_rate)
           } else {
             // Pre-fill with existing confirmed rate, or translator's base per-word rate × word count
-            const translator = data.job.translators
+            const translator = data.job.translation_translators
             const baseRate = data.job.vendor_confirmed_rate
               ?? (translator?.per_word_rate != null && data.job.word_count
                 ? +(translator.per_word_rate * data.job.word_count).toFixed(2)
@@ -77,7 +77,7 @@ export default function TranslationAcceptancePage() {
     }
   }
 
-  const translator = job?.translators
+  const translator = job?.translation_translators
   const deadline = job?.deadline_at ? new Date(job.deadline_at) : null
 
   if (pageState === 'loading') {
@@ -115,7 +115,7 @@ export default function TranslationAcceptancePage() {
             </p>
           )}
           <p className="text-sm text-gray-500 mb-6">Your invoice will be pre-filled with this amount when you submit after completing the work.</p>
-          <Link href="/vendor/jobs">
+          <Link href="/vendor/translation_jobs">
             <Button className="w-full bg-[#1a1a2e] hover:bg-[#2a2a4e]">Go to Vendor Portal</Button>
           </Link>
           <p className="text-sm text-gray-400 mt-4">Questions? Call <a href="tel:2133857781" className="text-blue-600">(213) 385-7781</a></p>

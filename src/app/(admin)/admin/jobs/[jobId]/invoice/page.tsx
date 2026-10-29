@@ -14,7 +14,7 @@ export default function InvoicePage() {
   const { jobId } = useParams<{ jobId: string }>()
   const router = useRouter()
   const [job, setJob] = useState<any>(null)
-  const [translators, setTranslators] = useState<any[]>([])
+  const [translation_translators, setTranslators] = useState<any[]>([])
   const [translatorId, setTranslatorId] = useState('')
   const [amount, setAmount] = useState('')
   const [invoiceNumber, setInvoiceNumber] = useState('')
@@ -24,8 +24,8 @@ export default function InvoicePage() {
   useEffect(() => {
     const supabase = createClient()
     Promise.all([
-      supabase.from('jobs').select('id, assigned_translator_id, quote_amount, quote_adjusted_amount, translators:assigned_translator_id(id, full_name)').eq('id', jobId).single(),
-      supabase.from('translators').select('id, full_name, email').eq('is_active', true).order('full_name'),
+      supabase.from('translation_jobs').select('id, assigned_translator_id, quote_amount, quote_adjusted_amount, translation_translators:assigned_translator_id(id, full_name)').eq('id', jobId).single(),
+      supabase.from('translation_translators').select('id, full_name, email').eq('is_active', true).order('full_name'),
     ]).then(([{ data: jobData }, { data: transData }]) => {
       setJob(jobData)
       setTranslators(transData ?? [])
@@ -40,13 +40,13 @@ export default function InvoicePage() {
     e.preventDefault()
     if (!translatorId || !amount) return
     setSubmitting(true)
-    const res = await fetch(`/api/admin/jobs/${jobId}/invoice`, {
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/invoice`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ translatorId, amount: parseFloat(amount), invoiceNumber: invoiceNumber || undefined, notes: notes || undefined }),
     })
     if (res.ok) {
-      router.push(`/admin/jobs/${jobId}`)
+      router.push(`/admin/translation_jobs/${jobId}`)
     } else {
       alert('Failed to record invoice.')
       setSubmitting(false)
@@ -58,7 +58,7 @@ export default function InvoicePage() {
   return (
     <div className="p-8 max-w-xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href={`/admin/jobs/${jobId}`} className="text-gray-400 hover:text-gray-600">
+        <Link href={`/admin/translation_jobs/${jobId}`} className="text-gray-400 hover:text-gray-600">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="text-xl font-bold text-[#1a1a2e]">Record Vendor Invoice</h1>
@@ -75,7 +75,7 @@ export default function InvoicePage() {
               required
             >
               <option value="">Select…</option>
-              {translators.map((t) => (
+              {translation_translators.map((t) => (
                 <option key={t.id} value={t.id}>{t.full_name} — {t.email}</option>
               ))}
             </select>

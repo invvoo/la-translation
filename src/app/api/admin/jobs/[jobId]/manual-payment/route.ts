@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { triggerPostPaymentActions } from '@/lib/jobs/post-payment'
+import { triggerPostPaymentActions } from '@/lib/translation_jobs/post-payment'
 
 const schema = z.object({
   method: z.enum(['cash', 'check', 'zelle', 'venmo', 'wire', 'other']),
@@ -26,8 +26,8 @@ export async function POST(req: NextRequest, { params }: Props) {
   const service = createServiceClient()
 
   const { data: job } = await (service as any)
-    .from('jobs')
-    .select('id, status, job_type, invoice_number, source_lang, target_lang, document_path, document_name, word_count, quote_amount, quote_adjusted_amount, scheduled_at, duration_minutes, location_type, location_details, interpretation_mode, interpretation_cert_required, specialty_multipliers:specialty_id(name), clients(contact_name, email)')
+    .from('translation_jobs')
+    .select('id, status, job_type, invoice_number, source_lang, target_lang, document_path, document_name, word_count, quote_amount, quote_adjusted_amount, scheduled_at, duration_minutes, location_type, location_details, interpretation_mode, interpretation_cert_required, translation_specialty_multipliers:specialty_id(name), translation_clients(contact_name, email)')
     .eq('id', jobId)
     .single()
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   // Advance to 'paid' (for interpretation/notary) or next appropriate status
   const nextStatus = job.job_type === 'translation' ? 'paid' : 'paid'
 
-  await service.from('jobs').update({
+  await service.from('translation_jobs').update({
     status: nextStatus,
     invoice_number: invoiceNumber,
     invoice_issued_at: new Date().toISOString(),
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     ...(amount != null ? { quote_adjusted_amount: amount } : {}),
   } as any).eq('id', jobId)
 
-  await service.from('job_status_history').insert({
+  await service.from('translation_job_status_history').insert({
     job_id: jobId,
     old_status: job.status,
     new_status: nextStatus,

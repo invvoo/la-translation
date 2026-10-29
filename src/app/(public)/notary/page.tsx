@@ -47,7 +47,7 @@ export default function NotaryPage() {
     setSubmitting(true)
     setError(null)
 
-    const res = await fetch('/api/jobs/notary', {
+    const res = await fetch('/api/translation_jobs/notary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -110,7 +110,7 @@ export default function NotaryPage() {
         {/* Trust banner */}
         <div className="flex items-center gap-2 text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-4 py-2.5 mb-6">
           <Building2 className="h-3.5 w-3.5 text-[#1a1a2e] shrink-0" />
-          <span>In-person notary services at our physical office — <strong>2975 Wilshire Blvd #205, Los Angeles, CA 90010</strong>. Serving clients since 2003.</span>
+          <span>In-person notary services at our physical office — <strong>2975 Wilshire Blvd #205, Los Angeles, CA 90010</strong>. Serving translation_clients since 2003.</span>
         </div>
 
         <div className="text-center mb-8">

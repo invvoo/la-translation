@@ -16,7 +16,7 @@ interface Interpreter {
   id: string
   full_name: string
   email: string
-  language_pairs: string[]
+  translation_language_pairs: string[]
   certifications: string[]
   vendor_type: string
   lat: number | null
@@ -72,10 +72,10 @@ export function SendInterpreterInquiryButton({
 
     if (interpreters.length > 0) return
     setFetching(true)
-    fetch('/api/admin/translators')
+    fetch('/api/admin/translation_translators')
       .then((r) => r.json())
       .then((data) => {
-        const list: Interpreter[] = (data.translators ?? []).filter(
+        const list: Interpreter[] = (data.translation_translators ?? []).filter(
           (t: any) => ['interpreter', 'both'].includes(t.vendor_type ?? '')
         )
         setInterpreters(list)
@@ -85,7 +85,7 @@ export function SendInterpreterInquiryButton({
 
   // Recompute matching whenever interpreters or jobCoords change
   const enriched: Interpreter[] = interpreters.map((t) => {
-    const langs: string[] = (t.language_pairs ?? []).map((l: string) => l.toLowerCase().trim())
+    const langs: string[] = (t.translation_language_pairs ?? []).map((l: string) => l.toLowerCase().trim())
     // Both source AND target must appear in the interpreter's language list
     const langMatch = sourceLang && targetLang
       ? langs.some((l) => l === sourceLang.toLowerCase() || l.includes(sourceLang.toLowerCase())) &&
@@ -133,7 +133,7 @@ export function SendInterpreterInquiryButton({
   async function send() {
     if (selected.size === 0) return
     setLoading(true)
-    const res = await fetch(`/api/admin/jobs/${jobId}/interpreter-inquiry`, {
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/interpreter-inquiry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ interpreterIds: Array.from(selected) }),

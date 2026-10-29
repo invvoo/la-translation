@@ -102,7 +102,7 @@ export default function InterpretationRequestPage() {
     setError(null)
 
     const eq = computeEquipmentEstimate()
-    const res = await fetch('/api/jobs/interpretation', {
+    const res = await fetch('/api/translation_jobs/interpretation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

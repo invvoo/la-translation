@@ -17,7 +17,7 @@ const SPECIALTIES = ['General', 'Legal', 'Medical', 'Technical', 'Financial', 'P
 export default function TranslatorDetailPage() {
   const { translatorId } = useParams<{ translatorId: string }>()
   const [translator, setTranslator] = useState<any>(null)
-  const [jobs, setJobs] = useState<any[]>([])
+  const [translation_jobs, setJobs] = useState<any[]>([])
   const [onboarding, setOnboarding] = useState(false)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -30,8 +30,8 @@ export default function TranslatorDetailPage() {
   useEffect(() => {
     const supabase = createClient()
     Promise.all([
-      supabase.from('translators').select('*').eq('id', translatorId).single(),
-      supabase.from('jobs').select('id, job_type, status, invoice_number, clients(contact_name)').eq('assigned_translator_id', translatorId).order('created_at', { ascending: false }).limit(20),
+      supabase.from('translation_translators').select('*').eq('id', translatorId).single(),
+      supabase.from('translation_jobs').select('id, job_type, status, invoice_number, translation_clients(contact_name)').eq('assigned_translator_id', translatorId).order('created_at', { ascending: false }).limit(20),
     ]).then(([{ data: t }, { data: j }]) => {
       setTranslator(t)
       setJobs(j ?? [])
@@ -40,7 +40,7 @@ export default function TranslatorDetailPage() {
 
   function startEditing() {
     setEditForm({ full_name: translator.full_name, email: translator.email, phone: translator.phone ?? '' })
-    const pairs = (translator.language_pairs ?? []).map((p: string) => {
+    const pairs = (translator.translation_language_pairs ?? []).map((p: string) => {
       const [source, target] = p.split('→')
       return { source: source?.trim() ?? '', target: target?.trim() ?? '' }
     })
@@ -54,26 +54,26 @@ export default function TranslatorDetailPage() {
   async function saveEditing() {
     setSaving(true)
     const pairs = editPairs.filter((p) => p.source && p.target).map((p) => `${p.source}→${p.target}`)
-    await fetch(`/api/admin/translators/${translatorId}`, {
+    await fetch(`/api/admin/translation_translators/${translatorId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         full_name: editForm.full_name,
         email: editForm.email,
         phone: editForm.phone || null,
-        language_pairs: pairs,
+        translation_language_pairs: pairs,
         specialties: editSpecialties,
       }),
     })
     // Refresh
-    const { data } = await createClient().from('translators').select('*').eq('id', translatorId).single()
+    const { data } = await createClient().from('translation_translators').select('*').eq('id', translatorId).single()
     setTranslator(data)
     setSaving(false)
     setEditing(false)
   }
 
   async function toggleActive() {
-    await fetch(`/api/admin/translators/${translatorId}`, {
+    await fetch(`/api/admin/translation_translators/${translatorId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !translator.is_active }),
@@ -83,7 +83,7 @@ export default function TranslatorDetailPage() {
 
   async function handleConnect() {
     setOnboarding(true)
-    const res = await fetch(`/api/admin/translators/${translatorId}/connect`, { method: 'POST' })
+    const res = await fetch(`/api/admin/translation_translators/${translatorId}/connect`, { method: 'POST' })
     const data = await res.json()
     if (data.onboardingUrl) window.open(data.onboardingUrl, '_blank')
     else alert('Failed to create onboarding link.')
@@ -95,7 +95,7 @@ export default function TranslatorDetailPage() {
   return (
     <div className="p-8 max-w-3xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin/translators" className="text-gray-400 hover:text-gray-600">
+        <Link href="/admin/translation_translators" className="text-gray-400 hover:text-gray-600">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="text-xl font-bold text-[#1a1a2e]">{translator.full_name}</h1>
@@ -209,11 +209,11 @@ export default function TranslatorDetailPage() {
             </Button>
           </div>
 
-          {(translator.language_pairs ?? []).length > 0 && (
+          {(translator.translation_language_pairs ?? []).length > 0 && (
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <h2 className="font-semibold mb-3">Language Pairs</h2>
               <div className="flex flex-wrap gap-2">
-                {translator.language_pairs.map((lp: string) => (
+                {translator.translation_language_pairs.map((lp: string) => (
                   <Badge key={lp} className="text-xs bg-blue-50 text-blue-700">{lp}</Badge>
                 ))}
               </div>
@@ -233,16 +233,16 @@ export default function TranslatorDetailPage() {
         </div>
       )}
 
-      {jobs.length > 0 && (
+      {translation_jobs.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="font-semibold">Assigned Jobs</h2>
           </div>
           <div className="divide-y divide-gray-50">
-            {jobs.map((j: any) => (
-              <Link key={j.id} href={`/admin/jobs/${j.id}`} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 text-sm">
+            {translation_jobs.map((j: any) => (
+              <Link key={j.id} href={`/admin/translation_jobs/${j.id}`} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 text-sm">
                 <span className="text-gray-500">{j.invoice_number ?? j.id.slice(0, 8)}</span>
-                <span className="flex-1 font-medium">{(j.clients as any)?.contact_name}</span>
+                <span className="flex-1 font-medium">{(j.translation_clients as any)?.contact_name}</span>
                 <span className="capitalize text-gray-500">{j.job_type.replace('_', ' ')}</span>
                 <span className="capitalize text-gray-400">{j.status}</span>
               </Link>

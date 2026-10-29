@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { error } = await service
-    .from('jobs')
+    .from('translation_jobs')
     .update({ handled_by: employeeId } as any)
     .eq('id', jobId)
 

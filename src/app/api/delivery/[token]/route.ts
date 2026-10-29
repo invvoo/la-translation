@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, { params }: Props) {
 
   const supabase = createServiceClient()
   const { data: job } = await supabase
-    .from('jobs')
+    .from('translation_jobs')
     .select('id, translated_doc_path, document_name, job_type')
     .eq('id', payload.jobId)
     .maybeSingle()

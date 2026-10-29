@@ -6,7 +6,7 @@ const schema = z.object({
   full_name: z.string().min(1).optional(),
   email: z.string().email().optional(),
   phone: z.string().nullable().optional(),
-  language_pairs: z.array(z.string()).optional(),
+  translation_language_pairs: z.array(z.string()).optional(),
   specialties: z.array(z.string()).optional(),
   notes: z.string().nullable().optional(),
   is_active: z.boolean().optional(),
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { error } = await supabase.from('translators').update(parsed.data).eq('id', translatorId)
+  const { error } = await supabase.from('translation_translators').update(parsed.data).eq('id', translatorId)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ ok: true })

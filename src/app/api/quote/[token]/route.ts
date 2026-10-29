@@ -15,8 +15,8 @@ export async function GET(_req: NextRequest, { params }: Props) {
     if (result.reason === 'expired' && result.expiredPayload?.jobId) {
       const supabase = createServiceClient()
       const { data: job } = await supabase
-        .from('jobs')
-        .select('id, job_type, source_lang, target_lang, clients(contact_name, email)')
+        .from('translation_jobs')
+        .select('id, job_type, source_lang, target_lang, translation_clients(contact_name, email)')
         .eq('id', result.expiredPayload.jobId)
         .maybeSingle() as unknown as { data: Record<string, any> | null }
       if (job) {
@@ -26,8 +26,8 @@ export async function GET(_req: NextRequest, { params }: Props) {
           jobType: job.job_type,
           sourceLang: job.source_lang,
           targetLang: job.target_lang,
-          clientName: (job.clients as any)?.contact_name ?? null,
-          clientEmail: (job.clients as any)?.email ?? null,
+          clientName: (job.translation_clients as any)?.contact_name ?? null,
+          clientEmail: (job.translation_clients as any)?.email ?? null,
         }, { status: 410 })
       }
     }
@@ -40,8 +40,8 @@ export async function GET(_req: NextRequest, { params }: Props) {
 
   const supabase = createServiceClient()
   const { data: job } = await supabase
-    .from('jobs')
-    .select('id, job_type, status, source_lang, target_lang, word_count, quote_amount, quote_adjusted_amount, quote_rush_days, quote_rush_fee_percent, quote_token_expires_at, quote_accepted_at, invoice_number, discount_amount, discount_label, clients(contact_name)')
+    .from('translation_jobs')
+    .select('id, job_type, status, source_lang, target_lang, word_count, quote_amount, quote_adjusted_amount, quote_rush_days, quote_rush_fee_percent, quote_token_expires_at, quote_accepted_at, invoice_number, discount_amount, discount_label, translation_clients(contact_name)')
     .eq('id', result.payload.jobId)
     .maybeSingle() as unknown as { data: Record<string, any> | null }
 
@@ -67,6 +67,6 @@ export async function GET(_req: NextRequest, { params }: Props) {
     rushFeePercent: job.quote_rush_fee_percent ?? 0,
     expiresAt: job.quote_token_expires_at,
     acceptedAt: job.quote_accepted_at,
-    clientName: (job.clients as any)?.contact_name,
+    clientName: (job.translation_clients as any)?.contact_name,
   })
 }

@@ -255,7 +255,7 @@ async function buildAndCreateJob(params: {
 
   const [specialtyRow, settingsResult] = await Promise.all([
     resolveSpecialty(supabase, certificationTpe, specialtyId),
-    supabase.from('system_settings').select('key, value').in('key', [
+    supabase.from('translation_system_settings').select('key, value').in('key', [
       'translation_minimum_standard','translation_minimum_certified',
       'translation_minimum_court','translation_minimum_court_premium',
       'translation_court_premium_langs',
@@ -294,7 +294,7 @@ async function buildAndCreateJob(params: {
 
   // Upsert client
   const { data: client, error: clientError } = await supabase
-    .from('clients')
+    .from('translation_clients')
     .upsert(
       { contact_name: clientName, email: clientEmail, phone: clientPhone ?? null, company_name: clientCompany ?? null },
       { onConflict: 'email', ignoreDuplicates: false }
@@ -337,7 +337,7 @@ async function buildAndCreateJob(params: {
   }
 
   let { data: job, error: jobError } = await supabase
-    .from('jobs')
+    .from('translation_jobs')
     .insert({ ...jobPayload, document_paths: allPaths.length > 1 ? allPaths : null } as any)
     .select('id')
     .single()
@@ -349,14 +349,14 @@ async function buildAndCreateJob(params: {
     delete stripped.mailing_fedex_overnight
     delete stripped.mailing_amount
     ;({ data: job, error: jobError } = await supabase
-      .from('jobs')
+      .from('translation_jobs')
       .insert({ ...stripped, document_paths: null } as any)
       .select('id')
       .single())
     // If document_paths also missing, strip that too
     if (jobError?.message?.includes('document_paths')) {
       ;({ data: job, error: jobError } = await supabase
-        .from('jobs')
+        .from('translation_jobs')
         .insert(stripped as any)
         .select('id')
         .single())
@@ -368,7 +368,7 @@ async function buildAndCreateJob(params: {
     return NextResponse.json({ error: 'Failed to create job', detail: jobError?.message ?? null }, { status: 500 })
   }
 
-  await supabase.from('job_status_history').insert({ job_id: job.id, new_status: 'draft' })
+  await supabase.from('translation_job_status_history').insert({ job_id: job.id, new_status: 'draft' })
 
   sendAutoQuoteEmail({
     clientName, clientEmail, sourceLang: effectiveSourceLang, targetLang,
@@ -397,12 +397,12 @@ async function resolveSpecialty(
   specialtyId: string | undefined,
 ): Promise<{ id: string | null; name: string | null; multiplier: number | null }> {
   if (certificationTpe) {
-    const { data } = await supabase.from('specialty_multipliers').select('id, name, multiplier')
+    const { data } = await supabase.from('translation_specialty_multipliers').select('id, name, multiplier')
       .eq('name', CERT_SPECIALTY[certificationTpe]).eq('is_active', true).maybeSingle()
     return { id: data?.id ?? null, name: data?.name ?? null, multiplier: data ? Number(data.multiplier) : null }
   }
   if (specialtyId) {
-    const { data } = await supabase.from('specialty_multipliers').select('id, name, multiplier').eq('id', specialtyId).single()
+    const { data } = await supabase.from('translation_specialty_multipliers').select('id, name, multiplier').eq('id', specialtyId).single()
     return { id: data?.id ?? null, name: data?.name ?? null, multiplier: data ? Number(data.multiplier) : null }
   }
   return { id: null, name: null, multiplier: 1.0 }

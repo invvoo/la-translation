@@ -42,12 +42,12 @@ export async function PATCH(req: NextRequest, { params }: Props) {
     ...(discountLabel != null ? { discount_label: discountLabel } : {}),
   }
 
-  let { error } = await service.from('jobs').update(updatePayload as any).eq('id', jobId)
+  let { error } = await service.from('translation_jobs').update(updatePayload as any).eq('id', jobId)
 
   // If discount columns don't exist yet (migration 0015 pending), retry without them
   if (error?.message?.includes('discount_')) {
     const { discount_amount: _da, discount_label: _dl, ...withoutDiscount } = updatePayload
-    ;({ error } = await service.from('jobs').update(withoutDiscount as any).eq('id', jobId))
+    ;({ error } = await service.from('translation_jobs').update(withoutDiscount as any).eq('id', jobId))
   }
 
   if (error) {
@@ -71,8 +71,8 @@ export async function POST(req: NextRequest, { params }: Props) {
   try {
     const service = createServiceClient()
     const { data: job } = await (service as any)
-      .from('jobs')
-      .select('id, job_type, status, source_lang, target_lang, quote_amount, quote_adjusted_amount, discount_amount, discount_label, clients(contact_name, email)')
+      .from('translation_jobs')
+      .select('id, job_type, status, source_lang, target_lang, quote_amount, quote_adjusted_amount, discount_amount, discount_label, translation_clients(contact_name, email)')
       .eq('id', jobId)
       .single()
 
@@ -82,16 +82,16 @@ export async function POST(req: NextRequest, { params }: Props) {
     const expiresAt = addDays(new Date(), expiryDays)
     const token = await signToken({ jobId, type: 'quote' }, `${expiryDays}d`)
     const amount = Number(job.quote_adjusted_amount ?? job.quote_amount)
-    const client = job.clients as any
+    const client = job.translation_clients as any
 
-    await service.from('jobs').update({
+    await service.from('translation_jobs').update({
       status: 'quote_sent',
       quote_token: token,
       quote_token_expires_at: expiresAt.toISOString(),
       quote_finalized_at: new Date().toISOString(),
     }).eq('id', jobId)
 
-    await service.from('job_status_history').insert({
+    await service.from('translation_job_status_history').insert({
       job_id: jobId,
       old_status: job.status,
       new_status: 'quote_sent',
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest, { params }: Props) {
       console.error('[quote/send] Resend error:', emailError)
     }
 
-    await service.from('email_log').insert({
+    await service.from('translation_email_log').insert({
       job_id: jobId,
       email_type: 'quote_sent',
       recipient: client.email,

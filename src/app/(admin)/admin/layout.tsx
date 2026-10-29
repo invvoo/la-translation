@@ -12,7 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // Verify the signed-in user is a registered employee
   const { data: employee } = await supabase
-    .from('employees')
+    .from('translation_employees')
     .select('id')
     .eq('id', user.id)
     .maybeSingle()

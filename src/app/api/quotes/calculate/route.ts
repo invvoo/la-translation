@@ -18,9 +18,9 @@ export async function POST(req: NextRequest) {
   const supabase = createServiceClient()
 
   const [{ data: langPair }, { data: specialty }, { data: settings }] = await Promise.all([
-    supabase.from('language_pairs').select('per_word_rate').eq('id', languagePairId).single(),
-    supabase.from('specialty_multipliers').select('name, multiplier').eq('id', specialtyId).single(),
-    supabase.from('system_settings').select('key, value').in('key', ['translation_minimum_standard', 'translation_minimum_certified']),
+    supabase.from('translation_language_pairs').select('per_word_rate').eq('id', languagePairId).single(),
+    supabase.from('translation_specialty_multipliers').select('name, multiplier').eq('id', specialtyId).single(),
+    supabase.from('translation_system_settings').select('key, value').in('key', ['translation_minimum_standard', 'translation_minimum_certified']),
   ])
 
   if (!langPair || !specialty) {

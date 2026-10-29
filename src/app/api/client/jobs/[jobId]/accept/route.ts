@@ -14,14 +14,14 @@ export async function POST(req: NextRequest, { params }: Props) {
 
     const service = createServiceClient()
     const { data: client } = await service
-      .from('clients')
+      .from('translation_clients')
       .select('id, contact_name, email, stripe_customer_id')
       .eq('email', user.email)
       .maybeSingle()
     if (!client) return NextResponse.json({ error: 'Client not found' }, { status: 404 })
 
     const { data: job } = await service
-      .from('jobs')
+      .from('translation_jobs')
       .select('id, job_type, status, source_lang, target_lang, quote_amount, quote_adjusted_amount')
       .eq('id', jobId)
       .eq('client_id', client.id)
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: Props) {
 
     // Fetch discount separately (columns may not be in generated types yet)
     const { data: jobExtra } = await service
-      .from('jobs')
+      .from('translation_jobs')
       .select('discount_amount, discount_label')
       .eq('id', jobId)
       .single() as any
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     if (!stripeCustomerId) {
       const customer = await getStripe().customers.create({ name: (client as any).contact_name, email: client.email })
       stripeCustomerId = customer.id
-      await service.from('clients').update({ stripe_customer_id: stripeCustomerId } as any).eq('id', client.id)
+      await service.from('translation_clients').update({ stripe_customer_id: stripeCustomerId } as any).eq('id', client.id)
     }
 
     const serviceLabel = job.source_lang && job.target_lang
@@ -81,8 +81,8 @@ export async function POST(req: NextRequest, { params }: Props) {
         quantity: 1,
       }],
       metadata: { jobId: job.id },
-      success_url: `${baseUrl}/client/jobs/${job.id}?paid=1`,
-      cancel_url: `${baseUrl}/client/jobs/${job.id}`,
+      success_url: `${baseUrl}/client/translation_jobs/${job.id}?paid=1`,
+      cancel_url: `${baseUrl}/client/translation_jobs/${job.id}`,
     }
 
     let session
@@ -95,14 +95,14 @@ export async function POST(req: NextRequest, { params }: Props) {
       if (isStaleCustomer && (client as any).email) {
         const newCustomer = await getStripe().customers.create({ name: (client as any).contact_name, email: (client as any).email })
         stripeCustomerId = newCustomer.id
-        await service.from('clients').update({ stripe_customer_id: stripeCustomerId } as any).eq('id', client.id)
+        await service.from('translation_clients').update({ stripe_customer_id: stripeCustomerId } as any).eq('id', client.id)
         session = await getStripe().checkout.sessions.create({ ...sessionParams, customer: stripeCustomerId, customer_email: undefined })
       } else {
         throw stripeErr
       }
     }
 
-    await service.from('jobs')
+    await service.from('translation_jobs')
       .update({ status: 'quote_accepted', quote_accepted_at: new Date().toISOString() } as any)
       .eq('id', job.id)
 

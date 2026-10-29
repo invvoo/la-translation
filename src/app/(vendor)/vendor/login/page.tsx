@@ -16,7 +16,7 @@ export default function VendorLoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/vendor/jobs`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/vendor/translation_jobs`,
       },
     })
   }

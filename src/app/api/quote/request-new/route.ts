@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
   if (jobId) {
     const supabase = createServiceClient()
     const { data: job } = await supabase
-      .from('jobs')
-      .select('id, job_type, source_lang, target_lang, clients(contact_name)')
+      .from('translation_jobs')
+      .select('id, job_type, source_lang, target_lang, translation_clients(contact_name)')
       .eq('id', jobId)
       .maybeSingle() as unknown as { data: Record<string, any> | null }
 
@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
       const label = job.source_lang && job.target_lang
         ? `${job.source_lang} → ${job.target_lang} (${job.job_type})`
         : job.job_type
-      const clientName = (job.clients as any)?.contact_name ?? ''
-      const adminLink = `${origin}/admin/jobs/${job.id}`
+      const clientName = (job.translation_clients as any)?.contact_name ?? ''
+      const adminLink = `${origin}/admin/translation_jobs/${job.id}`
       jobContext = `
         <p><strong>Job:</strong> <a href="${adminLink}">${adminLink}</a></p>
         <p><strong>Service:</strong> ${label}</p>

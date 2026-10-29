@@ -14,7 +14,7 @@ interface Props {
 
 const FINAL = ['complete', 'cancelled']
 
-export function JobActionsDropdown({ jobId, status, jobType, afterDelete = '/admin/jobs' }: Props) {
+export function JobActionsDropdown({ jobId, status, jobType, afterDelete = '/admin/translation_jobs' }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
@@ -49,7 +49,7 @@ export function JobActionsDropdown({ jobId, status, jobType, afterDelete = '/adm
   async function deleteJob(e: React.MouseEvent) {
     stopProp(e)
     setLoading(true)
-    await fetch(`/api/admin/jobs/${jobId}`, { method: 'DELETE' })
+    await fetch(`/api/admin/translation_jobs/${jobId}`, { method: 'DELETE' })
     window.location.href = afterDelete
   }
 
@@ -77,7 +77,7 @@ export function JobActionsDropdown({ jobId, status, jobType, afterDelete = '/adm
         </div>
       ) : (
         <>
-          <button onClick={(e) => { stopProp(e); router.push(`/admin/jobs/${jobId}`) }}
+          <button onClick={(e) => { stopProp(e); router.push(`/admin/translation_jobs/${jobId}`) }}
             className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 text-gray-700">
             <ExternalLink className="h-3.5 w-3.5 text-gray-400" /> View Details
           </button>

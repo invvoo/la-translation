@@ -19,7 +19,7 @@ export function AdminNotesPanel({ jobId, initialNotes }: Props) {
 
   async function save() {
     setSaving(true)
-    await fetch(`/api/admin/jobs/${jobId}`, {
+    await fetch(`/api/admin/translation_jobs/${jobId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ note: notes }),

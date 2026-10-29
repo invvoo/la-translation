@@ -26,7 +26,7 @@ export async function resolveTranslationRate(
 ): Promise<PricingResult> {
   // 1. Try direct pair
   const { data: direct } = await supabase
-    .from('language_pairs')
+    .from('translation_language_pairs')
     .select('per_word_rate')
     .eq('source_lang', sourceLang)
     .eq('target_lang', targetLang)
@@ -41,14 +41,14 @@ export async function resolveTranslationRate(
   if (sourceLang !== 'English' && targetLang !== 'English') {
     const [{ data: srcToEn }, { data: enToTgt }] = await Promise.all([
       supabase
-        .from('language_pairs')
+        .from('translation_language_pairs')
         .select('per_word_rate')
         .eq('source_lang', sourceLang)
         .eq('target_lang', 'English')
         .eq('is_active', true)
         .maybeSingle(),
       supabase
-        .from('language_pairs')
+        .from('translation_language_pairs')
         .select('per_word_rate')
         .eq('source_lang', 'English')
         .eq('target_lang', targetLang)
@@ -110,7 +110,7 @@ export async function calculateInterpretationQuote(
   supabase: ServiceClient,
 ): Promise<InterpretationQuoteResult> {
   const { data: settings } = await supabase
-    .from('system_settings')
+    .from('translation_system_settings')
     .select('key, value')
     .in('key', [
       'interpretation_rate_standard',

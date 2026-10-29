@@ -18,10 +18,10 @@ export async function POST(req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
 
-  const { data: job } = await service.from('jobs').select('id, status').eq('id', jobId).single()
+  const { data: job } = await service.from('translation_jobs').select('id, status').eq('id', jobId).single()
   if (!job) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const { error } = await (service as any).from('jobs').update({
+  const { error } = await (service as any).from('translation_jobs').update({
     reviewer_id: parsed.data.reviewerId,
   }).eq('id', jobId)
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   }
 
   if (parsed.data.reviewerId) {
-    await service.from('job_status_history').insert({
+    await service.from('translation_job_status_history').insert({
       job_id: jobId,
       old_status: job.status,
       new_status: job.status,

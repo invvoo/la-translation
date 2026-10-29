@@ -11,14 +11,14 @@ export async function GET(_req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data: translator } = await service
-    .from('translators')
+    .from('translation_translators')
     .select('id')
     .eq('email', user.email)
     .maybeSingle()
   if (!translator) return NextResponse.json({ invoice: null })
 
   const { data: invoice } = await service
-    .from('translator_invoices')
+    .from('translation_translator_invoices')
     .select('id, amount, status')
     .eq('job_id', jobId)
     .eq('translator_id', translator.id)

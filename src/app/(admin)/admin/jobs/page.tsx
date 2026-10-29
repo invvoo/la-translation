@@ -26,15 +26,15 @@ function getNextStep(job: any): NextStep | null {
   const s = job.status
   const isTranslation = job.job_type === 'translation'
 
-  if (s === 'draft') return { label: 'Send Quote →', href: `/admin/jobs/${id}/quote`, style: 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100' }
-  if (s === 'quote_sent') return { label: 'Resend Quote →', href: `/admin/jobs/${id}/quote`, style: 'text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100' }
-  if (s === 'quote_accepted') return { label: 'Awaiting payment', href: `/admin/jobs/${id}`, style: 'text-gray-500 bg-gray-50 border-gray-200' }
-  if ((s === 'paid' || s === 'ai_failed') && isTranslation) return { label: 'Assign →', href: `/admin/jobs/${id}/assign`, style: 'text-[#1a1a2e] bg-blue-50 border-blue-200 hover:bg-blue-100 font-semibold' }
-  if (s === 'ai_review_pending') return { label: 'Assign Reviewer →', href: `/admin/jobs/${id}/assign`, style: 'text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100' }
-  if (s === 'in_progress' && job.translated_doc_path) return { label: 'Review Submission →', href: `/admin/jobs/${id}/review`, style: 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100 font-semibold' }
-  if (s === 'assigned' && job.translated_doc_path) return { label: 'Review Submission →', href: `/admin/jobs/${id}/review`, style: 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100 font-semibold' }
-  if (s === 'confirmed') return { label: 'Assign →', href: `/admin/jobs/${id}/assign`, style: 'text-[#1a1a2e] bg-blue-50 border-blue-200 hover:bg-blue-100 font-semibold' }
-  if (s === 'delivered' || s === 'complete') return { label: 'View →', href: `/admin/jobs/${id}`, style: 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100' }
+  if (s === 'draft') return { label: 'Send Quote →', href: `/admin/translation_jobs/${id}/quote`, style: 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100' }
+  if (s === 'quote_sent') return { label: 'Resend Quote →', href: `/admin/translation_jobs/${id}/quote`, style: 'text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100' }
+  if (s === 'quote_accepted') return { label: 'Awaiting payment', href: `/admin/translation_jobs/${id}`, style: 'text-gray-500 bg-gray-50 border-gray-200' }
+  if ((s === 'paid' || s === 'ai_failed') && isTranslation) return { label: 'Assign →', href: `/admin/translation_jobs/${id}/assign`, style: 'text-[#1a1a2e] bg-blue-50 border-blue-200 hover:bg-blue-100 font-semibold' }
+  if (s === 'ai_review_pending') return { label: 'Assign Reviewer →', href: `/admin/translation_jobs/${id}/assign`, style: 'text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100' }
+  if (s === 'in_progress' && job.translated_doc_path) return { label: 'Review Submission →', href: `/admin/translation_jobs/${id}/review`, style: 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100 font-semibold' }
+  if (s === 'assigned' && job.translated_doc_path) return { label: 'Review Submission →', href: `/admin/translation_jobs/${id}/review`, style: 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100 font-semibold' }
+  if (s === 'confirmed') return { label: 'Assign →', href: `/admin/translation_jobs/${id}/assign`, style: 'text-[#1a1a2e] bg-blue-50 border-blue-200 hover:bg-blue-100 font-semibold' }
+  if (s === 'delivered' || s === 'complete') return { label: 'View →', href: `/admin/translation_jobs/${id}`, style: 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100' }
   return null
 }
 
@@ -47,8 +47,8 @@ export default async function JobsPage({ searchParams }: Props) {
   const isMine = mine === '1'
 
   let query = (supabase as any)
-    .from('jobs')
-    .select('id, job_type, status, created_at, source_lang, target_lang, word_count, quote_amount, quote_adjusted_amount, invoice_number, handled_by, translated_doc_path, clients(contact_name, email), handler:employees!jobs_handled_by_fkey(id, full_name)')
+    .from('translation_jobs')
+    .select('id, job_type, status, created_at, source_lang, target_lang, word_count, quote_amount, quote_adjusted_amount, invoice_number, handled_by, translated_doc_path, translation_clients(contact_name, email), handler:translation_employees!jobs_handled_by_fkey(id, full_name)')
     .order('created_at', { ascending: false })
     .limit(100)
 
@@ -64,25 +64,25 @@ export default async function JobsPage({ searchParams }: Props) {
     query = query.not('status', 'in', '(complete,cancelled)')
   }
 
-  const { data: jobs } = await query
+  const { data: translation_jobs } = await query
 
   const filtered = q
-    ? (jobs ?? []).filter((j: any) =>
-        j.clients?.contact_name?.toLowerCase().includes(q.toLowerCase()) ||
-        j.clients?.email?.toLowerCase().includes(q.toLowerCase()) ||
+    ? (translation_jobs ?? []).filter((j: any) =>
+        j.translation_clients?.contact_name?.toLowerCase().includes(q.toLowerCase()) ||
+        j.translation_clients?.email?.toLowerCase().includes(q.toLowerCase()) ||
         j.invoice_number?.toLowerCase().includes(q.toLowerCase())
       )
-    : (jobs ?? [])
+    : (translation_jobs ?? [])
 
   const filters = [
-    { label: 'Active', href: '/admin/jobs', key: 'active' },
-    { label: 'Mine', href: '/admin/jobs?mine=1', key: 'mine' },
-    { label: 'Translation', href: '/admin/jobs?type=translation', key: 'translation' },
-    { label: 'Interpretation', href: '/admin/jobs?type=interpretation', key: 'interpretation' },
-    { label: 'Equipment Rental', href: '/admin/jobs?type=equipment_rental', key: 'equipment_rental' },
-    { label: 'Notary', href: '/admin/jobs?type=notary', key: 'notary' },
-    { label: 'Transcription', href: '/admin/jobs?type=transcription', key: 'transcription' },
-    { label: 'Archived', href: '/admin/jobs?status=archived', key: 'archived' },
+    { label: 'Active', href: '/admin/translation_jobs', key: 'active' },
+    { label: 'Mine', href: '/admin/translation_jobs?mine=1', key: 'mine' },
+    { label: 'Translation', href: '/admin/translation_jobs?type=translation', key: 'translation' },
+    { label: 'Interpretation', href: '/admin/translation_jobs?type=interpretation', key: 'interpretation' },
+    { label: 'Equipment Rental', href: '/admin/translation_jobs?type=equipment_rental', key: 'equipment_rental' },
+    { label: 'Notary', href: '/admin/translation_jobs?type=notary', key: 'notary' },
+    { label: 'Transcription', href: '/admin/translation_jobs?type=transcription', key: 'transcription' },
+    { label: 'Archived', href: '/admin/translation_jobs?status=archived', key: 'archived' },
   ]
 
   return (
@@ -93,7 +93,7 @@ export default async function JobsPage({ searchParams }: Props) {
           <Suspense>
             <JobSearchInput />
           </Suspense>
-          <Link href="/admin/jobs/new">
+          <Link href="/admin/translation_jobs/new">
             <Button size="sm">
               <Plus className="h-4 w-4" />
               New Job
@@ -149,7 +149,7 @@ export default async function JobsPage({ searchParams }: Props) {
           <tbody className="divide-y divide-gray-50">
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-gray-400">No jobs found</td>
+                <td colSpan={9} className="px-4 py-10 text-center text-gray-400">No translation_jobs found</td>
               </tr>
             )}
             {filtered.map((job: any) => {
@@ -162,23 +162,23 @@ export default async function JobsPage({ searchParams }: Props) {
                   className={cn('hover:bg-gray-50 transition-colors group border-l-2', handlerColor ? handlerColor.row : 'border-l-transparent')}
                 >
                   <td className="p-0">
-                    <Link href={`/admin/jobs/${job.id}`} className="flex flex-col px-4 py-3">
-                      <span className="font-medium text-gray-900">{job.clients?.contact_name ?? '—'}</span>
-                      <span className="text-xs text-gray-400">{job.clients?.email}</span>
+                    <Link href={`/admin/translation_jobs/${job.id}`} className="flex flex-col px-4 py-3">
+                      <span className="font-medium text-gray-900">{job.translation_clients?.contact_name ?? '—'}</span>
+                      <span className="text-xs text-gray-400">{job.translation_clients?.email}</span>
                     </Link>
                   </td>
                   <td className="p-0">
-                    <Link href={`/admin/jobs/${job.id}`} className="flex items-center px-4 py-3 h-full text-gray-600">
+                    <Link href={`/admin/translation_jobs/${job.id}`} className="flex items-center px-4 py-3 h-full text-gray-600">
                       {JOB_TYPES[job.job_type as keyof typeof JOB_TYPES]}
                     </Link>
                   </td>
                   <td className="p-0">
-                    <Link href={`/admin/jobs/${job.id}`} className="flex items-center px-4 py-3 h-full text-gray-600">
+                    <Link href={`/admin/translation_jobs/${job.id}`} className="flex items-center px-4 py-3 h-full text-gray-600">
                       {job.source_lang && job.target_lang ? `${job.source_lang} → ${job.target_lang}` : '—'}
                     </Link>
                   </td>
                   <td className="p-0">
-                    <Link href={`/admin/jobs/${job.id}`} className="flex items-center px-4 py-3 h-full">
+                    <Link href={`/admin/translation_jobs/${job.id}`} className="flex items-center px-4 py-3 h-full">
                       <Badge className={cn('text-xs', STATUS_COLORS[job.status] ?? 'bg-gray-100 text-gray-700')}>
                         {STATUS_LABELS[job.status] ?? job.status}
                       </Badge>
@@ -202,14 +202,14 @@ export default async function JobsPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td className="p-0">
-                    <Link href={`/admin/jobs/${job.id}`} className="flex items-center justify-end px-4 py-3 h-full text-gray-600">
+                    <Link href={`/admin/translation_jobs/${job.id}`} className="flex items-center justify-end px-4 py-3 h-full text-gray-600">
                       {job.quote_adjusted_amount || job.quote_amount
                         ? formatCurrency(Number(job.quote_adjusted_amount ?? job.quote_amount))
                         : '—'}
                     </Link>
                   </td>
                   <td className="p-0">
-                    <Link href={`/admin/jobs/${job.id}`} className="flex items-center justify-end px-4 py-3 h-full text-gray-400">
+                    <Link href={`/admin/translation_jobs/${job.id}`} className="flex items-center justify-end px-4 py-3 h-full text-gray-400">
                       {formatDate(job.created_at)}
                     </Link>
                   </td>

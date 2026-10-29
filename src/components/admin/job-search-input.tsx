@@ -18,7 +18,7 @@ export function JobSearchInput() {
       params.delete('q')
     }
     startTransition(() => {
-      router.replace(`/admin/jobs?${params.toString()}`)
+      router.replace(`/admin/translation_jobs?${params.toString()}`)
     })
   }, [router, searchParams])
 

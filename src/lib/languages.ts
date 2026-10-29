@@ -63,7 +63,7 @@ export const ALL_LANGUAGES: string[] = [
   'Zulu',
 ].sort()
 
-/** Languages that commonly appear as source/target for LA-area clients. */
+/** Languages that commonly appear as source/target for LA-area translation_clients. */
 export const COMMON_LANGUAGES: string[] = [
   'Arabic', 'Armenian', 'Bengali', 'Cantonese', 'Chinese (Simplified)', 'Chinese (Traditional)',
   'Dutch', 'English', 'Farsi', 'French', 'German', 'Greek', 'Gujarati', 'Hebrew', 'Hindi',

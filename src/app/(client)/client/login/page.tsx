@@ -23,7 +23,7 @@ export default function ClientLoginPage() {
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/client/jobs`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/client/translation_jobs`,
       },
     })
     setLoading(false)
@@ -40,7 +40,7 @@ export default function ClientLoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/client/jobs`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/client/translation_jobs`,
       },
     })
   }

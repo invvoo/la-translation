@@ -10,8 +10,8 @@ export async function GET() {
 
   const service = createServiceClient()
   const { data: translator } = await (service as any)
-    .from('translators')
-    .select('id, full_name, email, phone, vendor_type, language_pairs, specialties, certifications, per_word_rate, hourly_rate, notes, payment_method, payment_details, address, city, state, zip, lat, lng')
+    .from('translation_translators')
+    .select('id, full_name, email, phone, vendor_type, translation_language_pairs, specialties, certifications, per_word_rate, hourly_rate, notes, payment_method, payment_details, address, city, state, zip, lat, lng')
     .eq('email', user.email)
     .maybeSingle()
 
@@ -22,7 +22,7 @@ export async function GET() {
 const schema = z.object({
   full_name: z.string().min(2).optional(),
   phone: z.string().optional(),
-  language_pairs: z.array(z.string()).optional(),
+  translation_language_pairs: z.array(z.string()).optional(),
   specialties: z.array(z.string()).optional(),
   certifications: z.array(z.string()).optional(),
   per_word_rate: z.number().positive().nullable().optional(),
@@ -47,7 +47,7 @@ export async function PATCH(req: NextRequest) {
 
   const service = createServiceClient()
   const { data: existing } = await (service as any)
-    .from('translators')
+    .from('translation_translators')
     .select('id, address, city, state, zip, lat, lng')
     .eq('email', user.email)
     .maybeSingle()
@@ -73,7 +73,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const { error } = await (service as any)
-    .from('translators')
+    .from('translation_translators')
     .update(updates)
     .eq('id', existing.id)
 

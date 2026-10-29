@@ -13,7 +13,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   const service = createServiceClient()
 
   const { data: translator } = await service
-    .from('translators')
+    .from('translation_translators')
     .select('id')
     .eq('email', user.email)
     .eq('is_active', true)
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   if (!translator) return NextResponse.json({ error: 'No active vendor account' }, { status: 403 })
 
   const { data: job } = await service
-    .from('jobs')
+    .from('translation_jobs')
     .select('id, status')
     .eq('id', jobId)
     .eq('assigned_translator_id', translator.id)
@@ -43,12 +43,12 @@ export async function POST(req: NextRequest, { params }: Props) {
 
   if (uploadError) return NextResponse.json({ error: 'Upload failed: ' + uploadError.message }, { status: 500 })
 
-  await service.from('jobs').update({
+  await service.from('translation_jobs').update({
     translated_doc_path: storagePath,
     status: 'in_progress',
   } as any).eq('id', jobId)
 
-  await service.from('job_status_history').insert({
+  await service.from('translation_job_status_history').insert({
     job_id: jobId,
     old_status: job.status,
     new_status: 'in_progress',

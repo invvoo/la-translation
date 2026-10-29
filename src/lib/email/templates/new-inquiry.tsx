@@ -70,7 +70,7 @@ export function NewInquiryEmail({
   adminUrl,
 }: NewInquiryEmailProps) {
   const typeLabel = JOB_TYPE_LABELS[jobType] ?? jobType
-  const jobUrl = adminUrl ? `${adminUrl}/admin/jobs/${jobId}` : null
+  const jobUrl = adminUrl ? `${adminUrl}/admin/translation_jobs/${jobId}` : null
 
   return (
     <Html>

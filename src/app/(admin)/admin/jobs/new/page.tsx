@@ -41,14 +41,14 @@ export default function NewJobPage() {
   const [deliveryMethod, setDeliveryMethod] = useState<'in_person' | 'mail'>('in_person')
 
   useEffect(() => {
-    createClient().from('specialty_multipliers').select('id, name').eq('is_active', true).order('name').then(({ data }) => setSpecialties(data ?? []))
+    createClient().from('translation_specialty_multipliers').select('id, name').eq('is_active', true).order('name').then(({ data }) => setSpecialties(data ?? []))
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
 
-    let url = `/api/jobs/${jobType.replace('_', '-')}`
+    let url = `/api/translation_jobs/${jobType.replace('_', '-')}`
     let body: any = { clientName, clientEmail, clientPhone: clientPhone || undefined, clientNotes: notes || undefined }
 
     if (jobType === 'translation' || jobType === 'interpretation') {
@@ -72,20 +72,20 @@ export default function NewJobPage() {
 
     if (res.ok) {
       const data = await res.json()
-      router.push(`/admin/jobs/${data.jobId}`)
+      router.push(`/admin/translation_jobs/${data.jobId}`)
     } else {
       alert('Failed to create job.')
       setSubmitting(false)
     }
   }
 
-  // Note: translation jobs with file upload go through the public form
+  // Note: translation translation_jobs with file upload go through the public form
   const showTranslationNote = jobType === 'translation'
 
   return (
     <div className="p-8 max-w-2xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin/jobs" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link href="/admin/translation_jobs" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="h-5 w-5" /></Link>
         <h1 className="text-xl font-bold text-[#1a1a2e]">New Job (Manual Entry)</h1>
       </div>
 
@@ -106,7 +106,7 @@ export default function NewJobPage() {
 
         {showTranslationNote && (
           <div className="bg-blue-50 rounded-lg px-4 py-3 text-sm text-blue-700">
-            For translation jobs with document upload, use the <Link href="/translation" target="_blank" className="underline font-medium">public request form</Link> or upload manually after creating this record.
+            For translation translation_jobs with document upload, use the <Link href="/translation" target="_blank" className="underline font-medium">public request form</Link> or upload manually after creating this record.
           </div>
         )}
 

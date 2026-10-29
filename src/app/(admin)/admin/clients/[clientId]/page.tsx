@@ -17,7 +17,7 @@ import { notFound } from 'next/navigation'
 export default function ClientDetailPage() {
   const { clientId } = useParams<{ clientId: string }>()
   const [client, setClient] = useState<any>(null)
-  const [jobs, setJobs] = useState<any[]>([])
+  const [translation_jobs, setJobs] = useState<any[]>([])
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ contact_name: '', phone: '', company_name: '', notes: '' })
@@ -25,8 +25,8 @@ export default function ClientDetailPage() {
   useEffect(() => {
     const supabase = createClient()
     Promise.all([
-      supabase.from('clients').select('*').eq('id', clientId).single(),
-      supabase.from('jobs').select('id, job_type, status, invoice_number, quote_amount, quote_adjusted_amount, created_at, source_lang, target_lang').eq('client_id', clientId).order('created_at', { ascending: false }),
+      supabase.from('translation_clients').select('*').eq('id', clientId).single(),
+      supabase.from('translation_jobs').select('id, job_type, status, invoice_number, quote_amount, quote_adjusted_amount, created_at, source_lang, target_lang').eq('client_id', clientId).order('created_at', { ascending: false }),
     ]).then(([{ data: c }, { data: j }]) => {
       setClient(c)
       setJobs(j ?? [])
@@ -45,7 +45,7 @@ export default function ClientDetailPage() {
 
   async function saveEditing() {
     setSaving(true)
-    await fetch(`/api/admin/clients/${clientId}`, {
+    await fetch(`/api/admin/translation_clients/${clientId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -62,12 +62,12 @@ export default function ClientDetailPage() {
 
   if (!client) return <div className="p-8 text-gray-400">Loading…</div>
 
-  const totalSpend = jobs.reduce((s, j) => s + Number(j.quote_adjusted_amount ?? j.quote_amount ?? 0), 0)
+  const totalSpend = translation_jobs.reduce((s, j) => s + Number(j.quote_adjusted_amount ?? j.quote_amount ?? 0), 0)
 
   return (
     <div className="p-8 max-w-3xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin/clients" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link href="/admin/translation_clients" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="flex-1">
           <h1 className="text-xl font-bold text-[#1a1a2e]">{client.contact_name}</h1>
           {client.company_name && <p className="text-sm text-gray-500">{client.company_name}</p>}
@@ -82,7 +82,7 @@ export default function ClientDetailPage() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-white rounded-lg border border-gray-200 p-5">
           <p className="text-sm text-gray-500">Total Jobs</p>
-          <p className="text-2xl font-bold text-[#1a1a2e]">{jobs.length}</p>
+          <p className="text-2xl font-bold text-[#1a1a2e]">{translation_jobs.length}</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-5">
           <p className="text-sm text-gray-500">Total Spend</p>
@@ -141,8 +141,8 @@ export default function ClientDetailPage() {
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-100 font-semibold">Job History</div>
         <div className="divide-y divide-gray-50">
-          {jobs.map((job) => (
-            <Link key={job.id} href={`/admin/jobs/${job.id}`} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 text-sm">
+          {translation_jobs.map((job) => (
+            <Link key={job.id} href={`/admin/translation_jobs/${job.id}`} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 text-sm">
               <span className="text-gray-400 w-32">{job.invoice_number ?? job.id.slice(0, 8)}</span>
               <span className="flex-1">{JOB_TYPES[job.job_type as keyof typeof JOB_TYPES]}{job.source_lang ? ` — ${job.source_lang} → ${job.target_lang}` : ''}</span>
               <Badge className={cn('text-xs', STATUS_COLORS[job.status] ?? 'bg-gray-100 text-gray-700')}>{STATUS_LABELS[job.status] ?? job.status}</Badge>
@@ -150,7 +150,7 @@ export default function ClientDetailPage() {
               <span className="text-gray-400">{formatDate(job.created_at)}</span>
             </Link>
           ))}
-          {jobs.length === 0 && <p className="px-6 py-8 text-center text-gray-400 text-sm">No jobs</p>}
+          {translation_jobs.length === 0 && <p className="px-6 py-8 text-center text-gray-400 text-sm">No translation_jobs</p>}
         </div>
       </div>
     </div>

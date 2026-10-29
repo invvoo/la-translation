@@ -16,7 +16,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
   const service = createServiceClient()
 
   const { data: job, error: jobErr } = await service
-    .from('jobs')
+    .from('translation_jobs')
     .select('id, job_type, status, source_lang, target_lang, document_path, document_name')
     .eq('id', jobId)
     .single() as any
@@ -32,12 +32,12 @@ export async function POST(_req: NextRequest, { params }: Props) {
   }
 
   // Mark as queued immediately so the UI reflects it
-  await service.from('jobs').update({
+  await service.from('translation_jobs').update({
     status: 'ai_translating',
     ai_translation_started_at: new Date().toISOString(),
   } as any).eq('id', jobId)
 
-  await service.from('job_status_history').insert({
+  await service.from('translation_job_status_history').insert({
     job_id: jobId,
     old_status: job.status,
     new_status: 'ai_translating',

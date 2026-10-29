@@ -13,7 +13,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data: invoice } = await service
-    .from('translator_invoices')
+    .from('translation_translator_invoices')
     .select('id, status')
     .eq('id', invoiceId)
     .single()
@@ -21,7 +21,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
   if (!invoice) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (invoice.status !== 'approved') return NextResponse.json({ error: 'Invoice not in approved state' }, { status: 409 })
 
-  await service.from('translator_invoices').update({
+  await service.from('translation_translator_invoices').update({
     status: 'paid',
     paid_at: new Date().toISOString(),
   }).eq('id', invoiceId)

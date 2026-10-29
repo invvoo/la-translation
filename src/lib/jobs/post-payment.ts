@@ -28,8 +28,8 @@ interface JobRow {
   location_details: string | null
   interpretation_mode: string | null
   interpretation_cert_required: string | null
-  clients: { contact_name: string; email: string } | null
-  specialty_multipliers: { name: string } | null
+  translation_clients: { contact_name: string; email: string } | null
+  translation_specialty_multipliers: { name: string } | null
 }
 
 /**
@@ -45,12 +45,12 @@ export async function triggerPostPaymentActions(
   invoiceNumber: string,
 ) {
   const jobId = job.id
-  const client = job.clients
+  const client = job.translation_clients
   const amount = Number(job.quote_adjusted_amount ?? job.quote_amount ?? 0)
   const adminNotifyEmail = process.env.ADMIN_NOTIFY_EMAIL ?? ADMIN_EMAIL
   const adminPortalUrl = `${BASE_URL}/admin`
-  const assignUrl = `${BASE_URL}/admin/jobs/${jobId}/assign`
-  const jobDetailUrl = `${BASE_URL}/admin/jobs/${jobId}`
+  const assignUrl = `${BASE_URL}/admin/translation_jobs/${jobId}/assign`
+  const jobDetailUrl = `${BASE_URL}/admin/translation_jobs/${jobId}`
 
   // ── Translation ────────────────────────────────────────────────────────────
   if (job.job_type === 'translation') {
@@ -108,7 +108,7 @@ async function handleTranslationPostPayment(
 
   if (!job.document_path) {
     // No document yet — just notify admin
-    const jobDetailUrl = `${BASE_URL}/admin/jobs/${jobId}`
+    const jobDetailUrl = `${BASE_URL}/admin/translation_jobs/${jobId}`
     try {
       const html = await renderAsync(AdminJobPaidEmail({
         jobType: 'translation',
@@ -132,8 +132,8 @@ async function handleTranslationPostPayment(
   }
 
   // Queue AI translation via Inngest (runs outside the webhook lifecycle)
-  await supabase.from('jobs').update({ status: 'ai_translating', ai_translation_started_at: new Date().toISOString() }).eq('id', jobId)
-  await supabase.from('job_status_history').insert({ job_id: jobId, old_status: 'paid', new_status: 'ai_translating', note: 'AI translation queued' })
+  await supabase.from('translation_jobs').update({ status: 'ai_translating', ai_translation_started_at: new Date().toISOString() }).eq('id', jobId)
+  await supabase.from('translation_job_status_history').insert({ job_id: jobId, old_status: 'paid', new_status: 'ai_translating', note: 'AI translation queued' })
 
   try {
     await inngest.send({ name: 'translation/run', data: { jobId, triggeredBy: 'payment' } })
@@ -152,7 +152,7 @@ async function handleTranslationPostPayment(
       sourceLang: job.source_lang ?? undefined,
       targetLang: job.target_lang ?? undefined,
       adminPortalUrl: `${BASE_URL}/admin`,
-      assignUrl: `${BASE_URL}/admin/jobs/${jobId}`,
+      assignUrl: `${BASE_URL}/admin/translation_jobs/${jobId}`,
       nextStepLabel: 'AI translation is running — you will receive another email when the draft is ready',
     }))
     await getResend().emails.send({
@@ -183,8 +183,8 @@ async function handleInterpretationPostPayment(
 
   // Find matching active interpreters
   let query = (supabase as any)
-    .from('translators')
-    .select('id, full_name, email, language_pairs, does_consecutive, does_simultaneous, court_certified, medical_certified')
+    .from('translation_translators')
+    .select('id, full_name, email, translation_language_pairs, does_consecutive, does_simultaneous, court_certified, medical_certified')
     .eq('is_active', true)
 
   if (mode === 'simultaneous') query = query.eq('does_simultaneous', true)
@@ -196,7 +196,7 @@ async function handleInterpretationPostPayment(
   const candidates: { id: string; full_name: string; email: string }[] = []
 
   for (const t of (allMatching ?? [])) {
-    const pairs: string[] = t.language_pairs ?? []
+    const pairs: string[] = t.translation_language_pairs ?? []
     // Match if they handle this pair (either direction or via English pivot)
     const directMatch = pairs.some(
       (p: string) => p === `${sourceLang}→${targetLang}` || p === `${targetLang}→${sourceLang}`,
@@ -233,7 +233,7 @@ async function handleInterpretationPostPayment(
         certRequired: cert !== 'none' ? cert : undefined,
         adminEmail: ADMIN_EMAIL,
         adminPhone: ADMIN_PHONE,
-        vendorPortalUrl: `${BASE_URL}/vendor/jobs`,
+        vendorPortalUrl: `${BASE_URL}/vendor/translation_jobs`,
       }))
 
       const { data: emailData, error: emailError } = await getResend().emails.send({
@@ -243,7 +243,7 @@ async function handleInterpretationPostPayment(
         html,
       })
 
-      await supabase.from('email_log').insert({
+      await supabase.from('translation_email_log').insert({
         job_id: jobId,
         email_type: 'interpreter_inquiry',
         recipient: interpreter.email,
@@ -261,7 +261,7 @@ async function handleInterpretationPostPayment(
 
   // Write inquiry outreach to status history
   if (contacted.length > 0) {
-    await supabase.from('job_status_history').insert({
+    await supabase.from('translation_job_status_history').insert({
       job_id: jobId,
       old_status: 'paid',
       new_status: 'paid',

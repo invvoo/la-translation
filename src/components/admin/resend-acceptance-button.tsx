@@ -10,7 +10,7 @@ export function ResendAcceptanceButton({ jobId }: { jobId: string }) {
 
   async function resend() {
     setState('loading')
-    const res = await fetch(`/api/admin/jobs/${jobId}/resend-acceptance`, { method: 'POST' })
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/resend-acceptance`, { method: 'POST' })
     const data = await res.json().catch(() => ({}))
     if (res.ok) {
       setState('done')

@@ -10,7 +10,7 @@ interface Bid {
   status: 'pending' | 'interested' | 'declined' | 'assigned'
   rate_notes: string | null
   responded_at: string | null
-  translators: { id: string; full_name: string; email: string }
+  translation_translators: { id: string; full_name: string; email: string }
 }
 
 interface Props {
@@ -33,7 +33,7 @@ function AssignFromBidButton({ jobId, translatorId, translatorName }: { jobId: s
   async function assign() {
     if (!confirm(`Assign ${translatorName} to this job?`)) return
     setLoading(true)
-    const res = await fetch(`/api/admin/jobs/${jobId}/assign`, {
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/assign`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ translatorId }),
@@ -61,7 +61,7 @@ export function TranslatorBidsPanel({ jobId, bids, assignedTranslatorId }: Props
         <h2 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
           <UserCheck className="h-4 w-4" /> Translator Responses
         </h2>
-        <p className="text-sm text-gray-400">No inquiries sent yet. Use &quot;Send Translator Inquiry&quot; above to contact translators.</p>
+        <p className="text-sm text-gray-400">No inquiries sent yet. Use &quot;Send Translator Inquiry&quot; above to contact translation_translators.</p>
       </div>
     )
   }
@@ -83,15 +83,15 @@ export function TranslatorBidsPanel({ jobId, bids, assignedTranslatorId }: Props
         {sorted.map((bid) => {
           const ui = STATUS_UI[bid.status] ?? STATUS_UI.pending
           const Icon = ui.icon
-          const isAssigned = bid.translators?.id === assignedTranslatorId
+          const isAssigned = bid.translation_translators?.id === assignedTranslatorId
           return (
             <div key={bid.id} className={`py-3 flex items-center gap-3 ${isAssigned ? 'bg-blue-50 -mx-5 px-5 rounded' : ''}`}>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm text-gray-900 flex items-center gap-2">
-                  {bid.translators?.full_name}
+                  {bid.translation_translators?.full_name}
                   {isAssigned && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium">Assigned</span>}
                 </p>
-                <p className="text-xs text-gray-400">{bid.translators?.email}</p>
+                <p className="text-xs text-gray-400">{bid.translation_translators?.email}</p>
                 {bid.rate_notes && (
                   <p className="text-xs text-gray-600 mt-0.5 italic">&quot;{bid.rate_notes}&quot;</p>
                 )}
@@ -102,7 +102,7 @@ export function TranslatorBidsPanel({ jobId, bids, assignedTranslatorId }: Props
                   {ui.label}
                 </span>
                 {bid.status === 'interested' && !assignedTranslatorId && (
-                  <AssignFromBidButton jobId={jobId} translatorId={bid.translators.id} translatorName={bid.translators.full_name} />
+                  <AssignFromBidButton jobId={jobId} translatorId={bid.translation_translators.id} translatorName={bid.translation_translators.full_name} />
                 )}
               </div>
             </div>

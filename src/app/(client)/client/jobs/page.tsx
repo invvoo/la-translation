@@ -33,7 +33,7 @@ interface Job {
 
 export default function ClientJobsPage() {
   const router = useRouter()
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [translation_jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState('')
 
@@ -42,9 +42,9 @@ export default function ClientJobsPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) setUserEmail(user.email)
     })
-    fetch('/api/client/jobs')
+    fetch('/api/client/translation_jobs')
       .then((r) => r.json())
-      .then((d) => setJobs(d.jobs ?? []))
+      .then((d) => setJobs(d.translation_jobs ?? []))
       .finally(() => setLoading(false))
   }, [])
 
@@ -88,7 +88,7 @@ export default function ClientJobsPage() {
           </div>
         )}
 
-        {!loading && jobs.length === 0 && (
+        {!loading && translation_jobs.length === 0 && (
           <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
             <FileText className="h-10 w-10 text-gray-200 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">No orders found for this account.</p>
@@ -103,14 +103,14 @@ export default function ClientJobsPage() {
         )}
 
         <div className="space-y-4">
-          {jobs.map((job) => {
+          {translation_jobs.map((job) => {
             const amount = job.display_amount ?? Number(job.quote_adjusted_amount ?? job.quote_amount ?? 0)
             const label = JOB_TYPE_LABELS[job.job_type] ?? job.job_type
             const langLabel = job.source_lang && job.target_lang ? `${job.source_lang} → ${job.target_lang}` : null
             const date = new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
             return (
-              <Link key={job.id} href={`/client/jobs/${job.id}`}
+              <Link key={job.id} href={`/client/translation_jobs/${job.id}`}
                 className={`block rounded-xl border p-6 hover:shadow-sm transition-all group ${job.status === 'quote_sent' ? 'bg-blue-50 border-blue-200 hover:border-blue-300' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">

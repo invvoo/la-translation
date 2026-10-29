@@ -46,14 +46,14 @@ DECLARE
   prefix  text;
   seq_val bigint;
 BEGIN
-  SELECT value INTO prefix FROM system_settings WHERE key = 'invoice_prefix';
+  SELECT value INTO prefix FROM translation_system_settings WHERE key = 'invoice_prefix';
   IF prefix IS NULL THEN prefix := 'INV'; END IF;
   seq_val := nextval('invoice_seq');
   RETURN prefix || '-' || to_char(now(), 'YYYY') || '-' || lpad(seq_val::text, 4, '0');
 END;
 $$;
 
--- Defined later (after employees table exists), but idempotent here as well.
+-- Defined later (after translation_employees table exists), but idempotent here as well.
 -- We re-declare it after the tables section so it can reference auth.uid().
 -- For now just create a placeholder that gets replaced below.
 
@@ -73,8 +73,8 @@ END $$;
 -- 4. TABLES (all columns from all 22 migrations pre-merged)
 -- ============================================================
 
--- ── language_pairs ────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS language_pairs (
+-- ── translation_language_pairs ────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_language_pairs (
   id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   source_lang   text        NOT NULL,
   target_lang   text        NOT NULL,
@@ -85,8 +85,8 @@ CREATE TABLE IF NOT EXISTS language_pairs (
   UNIQUE (source_lang, target_lang)
 );
 
--- ── specialty_multipliers ─────────────────────────────────────
-CREATE TABLE IF NOT EXISTS specialty_multipliers (
+-- ── translation_specialty_multipliers ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_specialty_multipliers (
   id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   name        text        NOT NULL UNIQUE,
   multiplier  numeric(6,4) NOT NULL DEFAULT 1.0,
@@ -95,8 +95,8 @@ CREATE TABLE IF NOT EXISTS specialty_multipliers (
   updated_at  timestamptz NOT NULL DEFAULT now()
 );
 
--- ── equipment_items ───────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS equipment_items (
+-- ── translation_equipment_items ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_equipment_items (
   id                 uuid         PRIMARY KEY DEFAULT gen_random_uuid(),
   name               text         NOT NULL,
   description        text,
@@ -109,8 +109,8 @@ CREATE TABLE IF NOT EXISTS equipment_items (
   updated_at         timestamptz  NOT NULL DEFAULT now()
 );
 
--- ── system_settings ───────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS system_settings (
+-- ── translation_system_settings ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_system_settings (
   id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   key         text        NOT NULL UNIQUE,
   value       text        NOT NULL,
@@ -119,8 +119,8 @@ CREATE TABLE IF NOT EXISTS system_settings (
   updated_at  timestamptz NOT NULL DEFAULT now()
 );
 
--- ── clients ───────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS clients (
+-- ── translation_clients ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_clients (
   id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   contact_name       text        NOT NULL,
   email              text        NOT NULL UNIQUE,
@@ -132,8 +132,8 @@ CREATE TABLE IF NOT EXISTS clients (
   updated_at         timestamptz NOT NULL DEFAULT now()
 );
 
--- ── employees ─────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS employees (
+-- ── translation_employees ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_employees (
   id         uuid        PRIMARY KEY,  -- same as auth.users.id
   full_name  text        NOT NULL,
   role       text        NOT NULL DEFAULT 'employee'
@@ -142,13 +142,13 @@ CREATE TABLE IF NOT EXISTS employees (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- ── translators ───────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS translators (
+-- ── translation_translators ───────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_translators (
   id                    uuid         PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name             text         NOT NULL,
   email                 text         NOT NULL UNIQUE,
   phone                 text,
-  language_pairs        text[]       NOT NULL DEFAULT '{}',
+  translation_language_pairs        text[]       NOT NULL DEFAULT '{}',
   specialties           text[]       NOT NULL DEFAULT '{}',
   stripe_connect_id     text,
   stripe_connect_status text         DEFAULT 'pending'
@@ -182,20 +182,20 @@ CREATE TABLE IF NOT EXISTS translators (
   updated_at            timestamptz  NOT NULL DEFAULT now()
 );
 
--- ── jobs ──────────────────────────────────────────────────────
+-- ── translation_jobs ──────────────────────────────────────────────────────
 -- Includes all columns added across migrations 0001–0022.
-CREATE TABLE IF NOT EXISTS jobs (
+CREATE TABLE IF NOT EXISTS translation_jobs (
   id        uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   -- 0010: transcription added to constraint
   job_type  text NOT NULL
               CHECK (job_type IN ('translation', 'interpretation', 'equipment_rental', 'notary', 'transcription')),
   status    text NOT NULL DEFAULT 'draft',
-  client_id uuid NOT NULL REFERENCES clients(id),
+  client_id uuid NOT NULL REFERENCES translation_clients(id),
 
   -- Language (translation + interpretation)
   source_lang   text,
   target_lang   text,
-  specialty_id  uuid REFERENCES specialty_multipliers(id),
+  specialty_id  uuid REFERENCES translation_specialty_multipliers(id),
 
   -- Translation-specific
   word_count                  integer,
@@ -284,11 +284,11 @@ CREATE TABLE IF NOT EXISTS jobs (
   payment_collected_at        timestamptz,
 
   -- Assignment
-  assigned_translator_id  uuid REFERENCES translators(id),
+  assigned_translator_id  uuid REFERENCES translation_translators(id),
   assigned_at             timestamptz,
   deadline_at             timestamptz,
   -- 0016: job handler (internal admin)
-  handled_by              uuid REFERENCES employees(id) ON DELETE SET NULL,
+  handled_by              uuid REFERENCES translation_employees(id) ON DELETE SET NULL,
   -- 0020: vendor confirmed rate
   vendor_confirmed_rate       numeric(10,2),
   vendor_accepted_at          timestamptz,
@@ -296,7 +296,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   vendor_overtime_requested   boolean DEFAULT false,
   vendor_overtime_notes       text,
   -- 0022: reviewer
-  reviewer_id             uuid REFERENCES employees(id),
+  reviewer_id             uuid REFERENCES translation_employees(id),
   reviewed_at             timestamptz,
 
   -- Delivery
@@ -306,7 +306,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 
   -- Internal
   employee_notes text,
-  created_by     uuid REFERENCES employees(id),
+  created_by     uuid REFERENCES translation_employees(id),
   -- 0003: language detection
   detected_source_lang             text,
   detected_source_lang_confidence  numeric(4,3),
@@ -318,22 +318,22 @@ CREATE TABLE IF NOT EXISTS jobs (
   updated_at  timestamptz NOT NULL DEFAULT now()
 );
 
--- ── job_status_history ────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS job_status_history (
+-- ── translation_job_status_history ────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_job_status_history (
   id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  job_id      uuid        NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+  job_id      uuid        NOT NULL REFERENCES translation_jobs(id) ON DELETE CASCADE,
   old_status  text,
   new_status  text        NOT NULL,
-  changed_by  uuid        REFERENCES employees(id),
+  changed_by  uuid        REFERENCES translation_employees(id),
   note        text,
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 
--- ── translator_invoices ───────────────────────────────────────
-CREATE TABLE IF NOT EXISTS translator_invoices (
+-- ── translation_translator_invoices ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_translator_invoices (
   id                 uuid         PRIMARY KEY DEFAULT gen_random_uuid(),
-  job_id             uuid         NOT NULL REFERENCES jobs(id),
-  translator_id      uuid         NOT NULL REFERENCES translators(id),
+  job_id             uuid         NOT NULL REFERENCES translation_jobs(id),
+  translator_id      uuid         NOT NULL REFERENCES translation_translators(id),
   amount             numeric(12,2) NOT NULL,
   currency           text         NOT NULL DEFAULT 'usd',
   status             text         NOT NULL DEFAULT 'submitted'
@@ -341,7 +341,7 @@ CREATE TABLE IF NOT EXISTS translator_invoices (
   invoice_number     text,
   submitted_at       timestamptz  NOT NULL DEFAULT now(),
   approved_at        timestamptz,
-  approved_by        uuid         REFERENCES employees(id),
+  approved_by        uuid         REFERENCES translation_employees(id),
   payout_due_at      timestamptz,
   stripe_transfer_id text,
   paid_at            timestamptz,
@@ -350,10 +350,10 @@ CREATE TABLE IF NOT EXISTS translator_invoices (
   updated_at         timestamptz  NOT NULL DEFAULT now()
 );
 
--- ── email_log ─────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS email_log (
+-- ── translation_email_log ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_email_log (
   id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  job_id        uuid        REFERENCES jobs(id),
+  job_id        uuid        REFERENCES translation_jobs(id),
   email_type    text        NOT NULL,
   recipient     text        NOT NULL,
   subject       text        NOT NULL,
@@ -364,11 +364,11 @@ CREATE TABLE IF NOT EXISTS email_log (
   error_message text
 );
 
--- ── interpreter_bids (0019) ───────────────────────────────────
-CREATE TABLE IF NOT EXISTS interpreter_bids (
+-- ── translation_interpreter_bids (0019) ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS translation_interpreter_bids (
   id            uuid         PRIMARY KEY DEFAULT gen_random_uuid(),
-  job_id        uuid         NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
-  translator_id uuid         NOT NULL REFERENCES translators(id),
+  job_id        uuid         NOT NULL REFERENCES translation_jobs(id) ON DELETE CASCADE,
+  translator_id uuid         NOT NULL REFERENCES translation_translators(id),
   token         text         NOT NULL UNIQUE,
   rate          numeric(10,2),
   rate_notes    text,
@@ -383,25 +383,25 @@ CREATE TABLE IF NOT EXISTS interpreter_bids (
 -- 5. INDEXES
 -- ============================================================
 
-CREATE INDEX IF NOT EXISTS idx_jobs_client              ON jobs(client_id);
-CREATE INDEX IF NOT EXISTS idx_jobs_status              ON jobs(status);
-CREATE INDEX IF NOT EXISTS idx_jobs_type                ON jobs(job_type);
-CREATE INDEX IF NOT EXISTS idx_jobs_assigned_translator ON jobs(assigned_translator_id);
-CREATE INDEX IF NOT EXISTS idx_jobs_quote_token         ON jobs(quote_token);
-CREATE INDEX IF NOT EXISTS idx_jobs_delivery_token      ON jobs(delivery_token);
-CREATE INDEX IF NOT EXISTS idx_jobs_created_at          ON jobs(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_jobs_handled_by          ON jobs(handled_by);
-CREATE INDEX IF NOT EXISTS idx_jobs_reviewer            ON jobs(reviewer_id);
+CREATE INDEX IF NOT EXISTS idx_jobs_client              ON translation_jobs(client_id);
+CREATE INDEX IF NOT EXISTS idx_jobs_status              ON translation_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_jobs_type                ON translation_jobs(job_type);
+CREATE INDEX IF NOT EXISTS idx_jobs_assigned_translator ON translation_jobs(assigned_translator_id);
+CREATE INDEX IF NOT EXISTS idx_jobs_quote_token         ON translation_jobs(quote_token);
+CREATE INDEX IF NOT EXISTS idx_jobs_delivery_token      ON translation_jobs(delivery_token);
+CREATE INDEX IF NOT EXISTS idx_jobs_created_at          ON translation_jobs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_jobs_handled_by          ON translation_jobs(handled_by);
+CREATE INDEX IF NOT EXISTS idx_jobs_reviewer            ON translation_jobs(reviewer_id);
 
-CREATE INDEX IF NOT EXISTS idx_status_history_job       ON job_status_history(job_id);
+CREATE INDEX IF NOT EXISTS idx_status_history_job       ON translation_job_status_history(job_id);
 
-CREATE INDEX IF NOT EXISTS idx_translator_invoices_status ON translator_invoices(status);
-CREATE INDEX IF NOT EXISTS idx_translator_invoices_due    ON translator_invoices(payout_due_at);
+CREATE INDEX IF NOT EXISTS idx_translator_invoices_status ON translation_translator_invoices(status);
+CREATE INDEX IF NOT EXISTS idx_translator_invoices_due    ON translation_translator_invoices(payout_due_at);
 
-CREATE INDEX IF NOT EXISTS idx_email_log_job            ON email_log(job_id);
+CREATE INDEX IF NOT EXISTS idx_email_log_job            ON translation_email_log(job_id);
 
-CREATE INDEX IF NOT EXISTS interpreter_bids_job_id_idx  ON interpreter_bids(job_id);
-CREATE INDEX IF NOT EXISTS interpreter_bids_token_idx   ON interpreter_bids(token);
+CREATE INDEX IF NOT EXISTS interpreter_bids_job_id_idx  ON translation_interpreter_bids(job_id);
+CREATE INDEX IF NOT EXISTS interpreter_bids_token_idx   ON translation_interpreter_bids(token);
 
 
 -- ============================================================
@@ -410,42 +410,42 @@ CREATE INDEX IF NOT EXISTS interpreter_bids_token_idx   ON interpreter_bids(toke
 
 DO $$ BEGIN
   CREATE TRIGGER trg_language_pairs_updated
-    BEFORE UPDATE ON language_pairs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    BEFORE UPDATE ON translation_language_pairs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   CREATE TRIGGER trg_specialty_multipliers_updated
-    BEFORE UPDATE ON specialty_multipliers FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    BEFORE UPDATE ON translation_specialty_multipliers FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   CREATE TRIGGER trg_equipment_items_updated
-    BEFORE UPDATE ON equipment_items FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    BEFORE UPDATE ON translation_equipment_items FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   CREATE TRIGGER trg_clients_updated
-    BEFORE UPDATE ON clients FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    BEFORE UPDATE ON translation_clients FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   CREATE TRIGGER trg_translators_updated
-    BEFORE UPDATE ON translators FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    BEFORE UPDATE ON translation_translators FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   CREATE TRIGGER trg_jobs_updated
-    BEFORE UPDATE ON jobs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    BEFORE UPDATE ON translation_jobs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   CREATE TRIGGER trg_translator_invoices_updated
-    BEFORE UPDATE ON translator_invoices FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    BEFORE UPDATE ON translation_translator_invoices FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   CREATE TRIGGER trg_interpreter_bids_updated
-    BEFORE UPDATE ON interpreter_bids FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    BEFORE UPDATE ON translation_interpreter_bids FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 
@@ -453,87 +453,87 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 -- 7. ROW LEVEL SECURITY
 -- ============================================================
 
-ALTER TABLE language_pairs       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE specialty_multipliers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE equipment_items      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE system_settings      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE clients              ENABLE ROW LEVEL SECURITY;
-ALTER TABLE employees            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE translators          ENABLE ROW LEVEL SECURITY;
-ALTER TABLE jobs                 ENABLE ROW LEVEL SECURITY;
-ALTER TABLE job_status_history   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE translator_invoices  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE email_log            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE interpreter_bids     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_language_pairs       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_specialty_multipliers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_equipment_items      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_system_settings      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_clients              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_employees            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_translators          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_jobs                 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_job_status_history   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_translator_invoices  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_email_log            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translation_interpreter_bids     ENABLE ROW LEVEL SECURITY;
 
 -- Helper: check if the calling user is an active employee
 CREATE OR REPLACE FUNCTION is_employee()
 RETURNS boolean LANGUAGE sql SECURITY DEFINER AS $$
   SELECT EXISTS (
-    SELECT 1 FROM employees
+    SELECT 1 FROM translation_employees
     WHERE id = auth.uid() AND is_active = true
   );
 $$;
 
 -- Employees: full access to all tables
-DO $$ BEGIN CREATE POLICY "employees_all" ON language_pairs
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_language_pairs
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON specialty_multipliers
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_specialty_multipliers
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON equipment_items
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_equipment_items
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON system_settings
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_system_settings
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON clients
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_clients
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON employees
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_employees
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON translators
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_translators
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON jobs
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_jobs
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON job_status_history
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_job_status_history
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON translator_invoices
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_translator_invoices
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON email_log
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_email_log
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "employees_all" ON interpreter_bids
+DO $$ BEGIN CREATE POLICY "employees_all" ON translation_interpreter_bids
   TO authenticated USING (is_employee()) WITH CHECK (is_employee());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Public read: reference data for client-facing forms
-DO $$ BEGIN CREATE POLICY "public_read" ON language_pairs
+DO $$ BEGIN CREATE POLICY "public_read" ON translation_language_pairs
   FOR SELECT TO anon USING (is_active = true);
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "public_read" ON specialty_multipliers
+DO $$ BEGIN CREATE POLICY "public_read" ON translation_specialty_multipliers
   FOR SELECT TO anon USING (is_active = true);
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN CREATE POLICY "public_read" ON equipment_items
+DO $$ BEGIN CREATE POLICY "public_read" ON translation_equipment_items
   FOR SELECT TO anon USING (is_active = true);
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
@@ -543,7 +543,7 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 -- Final values after all migrations (0002–0007 updates applied)
 -- ============================================================
 
-INSERT INTO system_settings (key, value, description) VALUES
+INSERT INTO translation_system_settings (key, value, description) VALUES
   ('translation_minimum_standard',        '95.00',    'Minimum charge for any standard translation'),
   ('translation_minimum_certified',       '120.00',   'Minimum charge for Certified (USCIS) translations'),
   ('translation_minimum_court',           '275.00',   'Court certification minimum — most languages'),
@@ -569,7 +569,7 @@ ON CONFLICT (key) DO UPDATE
 -- Final values after 0003 + 0009 updates
 -- ============================================================
 
-INSERT INTO specialty_multipliers (name, multiplier, is_active) VALUES
+INSERT INTO translation_specialty_multipliers (name, multiplier, is_active) VALUES
   ('General',                       1.0000, true),
   ('Certified (USCIS)',              1.8000, true),
   ('Court Certified',                3.0000, true),
@@ -644,12 +644,12 @@ BEGIN
     ELSE
       rate := 0.10;
     END IF;
-    INSERT INTO language_pairs (source_lang, target_lang, per_word_rate, is_active)
+    INSERT INTO translation_language_pairs (source_lang, target_lang, per_word_rate, is_active)
     VALUES ('English', lang, rate, true)
     ON CONFLICT (source_lang, target_lang) DO UPDATE
       SET per_word_rate = EXCLUDED.per_word_rate, is_active = true;
 
-    INSERT INTO language_pairs (source_lang, target_lang, per_word_rate, is_active)
+    INSERT INTO translation_language_pairs (source_lang, target_lang, per_word_rate, is_active)
     VALUES (lang, 'English', rate, true)
     ON CONFLICT (source_lang, target_lang) DO UPDATE
       SET per_word_rate = EXCLUDED.per_word_rate, is_active = true;
@@ -657,7 +657,7 @@ BEGIN
 END $$;
 
 -- Common cross-language pairs (non-English hubs)
-INSERT INTO language_pairs (source_lang, target_lang, per_word_rate, is_active) VALUES
+INSERT INTO translation_language_pairs (source_lang, target_lang, per_word_rate, is_active) VALUES
   ('Spanish', 'French',                   0.20, true),
   ('French',  'Spanish',                  0.20, true),
   ('Spanish', 'Portuguese',               0.20, true),
@@ -712,7 +712,7 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('job-documents', 'job-documents', false)
 ON CONFLICT (id) DO NOTHING;
 
--- Allow authenticated users (employees) to read/write job documents
+-- Allow authenticated users (translation_employees) to read/write job documents
 DO $$ BEGIN
   CREATE POLICY "employees_read_job_docs" ON storage.objects
     FOR SELECT TO authenticated

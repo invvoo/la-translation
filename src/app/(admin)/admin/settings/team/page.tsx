@@ -40,7 +40,7 @@ function InviteForm({ onInvited }: { onInvited: () => void }) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/admin/employees', {
+      const res = await fetch('/api/admin/translation_employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, full_name: fullName, role }),
@@ -125,12 +125,12 @@ function InviteForm({ onInvited }: { onInvited: () => void }) {
 }
 
 export default function TeamPage() {
-  const [employees, setEmployees] = useState<Employee[]>([])
+  const [translation_employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
 
   async function load() {
     setLoading(true)
-    const res = await fetch('/api/admin/employees')
+    const res = await fetch('/api/admin/translation_employees')
     if (res.ok) setEmployees(await res.json())
     setLoading(false)
   }
@@ -166,14 +166,14 @@ export default function TeamPage() {
               </tr>
             </thead>
             <tbody>
-              {employees.length === 0 ? (
+              {translation_employees.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-sm">
                     No team members yet
                   </td>
                 </tr>
               ) : (
-                employees.map((emp) => (
+                translation_employees.map((emp) => (
                   <tr key={emp.id} className="border-t border-gray-100">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">

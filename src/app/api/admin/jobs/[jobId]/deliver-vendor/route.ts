@@ -17,8 +17,8 @@ export async function POST(_req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data: job } = await service
-    .from('jobs')
-    .select('id, status, job_type, source_lang, target_lang, invoice_number, translated_doc_path, clients(contact_name, email)')
+    .from('translation_jobs')
+    .select('id, status, job_type, source_lang, target_lang, invoice_number, translated_doc_path, translation_clients(contact_name, email)')
     .eq('id', jobId)
     .single() as any
 
@@ -27,13 +27,13 @@ export async function POST(_req: NextRequest, { params }: Props) {
 
   const deliveryToken = await signToken({ jobId, type: 'delivery' }, '30d')
 
-  await service.from('jobs').update({
+  await service.from('translation_jobs').update({
     delivered_at: new Date().toISOString(),
     delivery_token: deliveryToken,
     status: 'complete',
   }).eq('id', jobId)
 
-  await service.from('job_status_history').insert({
+  await service.from('translation_job_status_history').insert({
     job_id: jobId,
     old_status: job.status,
     new_status: 'complete',
@@ -41,7 +41,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
     note: 'Delivered using vendor submission',
   })
 
-  const client = job.clients as any
+  const client = job.translation_clients as any
   if (client?.email) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? ''
     const html = await renderAsync(DeliveryReadyEmail({
@@ -60,7 +60,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
       html,
     })
 
-    await service.from('email_log').insert({
+    await service.from('translation_email_log').insert({
       job_id: jobId,
       email_type: 'delivery',
       recipient: client.email,
@@ -69,7 +69,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
       status: emailError ? 'failed' : 'sent',
     } as any)
 
-    await service.from('jobs').update({ delivery_email_sent_at: new Date().toISOString() }).eq('id', jobId)
+    await service.from('translation_jobs').update({ delivery_email_sent_at: new Date().toISOString() }).eq('id', jobId)
   }
 
   await autoClaimJob(service, jobId, user.id)

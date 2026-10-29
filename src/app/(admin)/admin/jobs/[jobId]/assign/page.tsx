@@ -13,7 +13,7 @@ interface Translator {
   id: string
   full_name: string
   email: string
-  language_pairs: string[]
+  translation_language_pairs: string[]
   specialties: string[]
   court_certified: boolean
   medical_certified: boolean
@@ -31,7 +31,7 @@ interface JobInfo {
 
 function matchScore(t: Translator, job: JobInfo): number {
   if (job.job_type !== 'interpretation') return 0
-  const pairs: string[] = t.language_pairs ?? []
+  const pairs: string[] = t.translation_language_pairs ?? []
   const src = job.source_lang ?? ''
   const tgt = job.target_lang ?? ''
   let score = 0
@@ -48,7 +48,7 @@ export default function AssignPage() {
   const { jobId } = useParams<{ jobId: string }>()
   const router = useRouter()
   const [job, setJob] = useState<JobInfo | null>(null)
-  const [translators, setTranslators] = useState<Translator[]>([])
+  const [translation_translators, setTranslators] = useState<Translator[]>([])
   const [selectedId, setSelectedId] = useState('')
   const [deadline, setDeadline] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -58,14 +58,14 @@ export default function AssignPage() {
     const supabase = createClient()
     Promise.all([
       (supabase as any)
-        .from('jobs')
+        .from('translation_jobs')
         .select('job_type, source_lang, target_lang, interpretation_mode, interpretation_cert_required')
         .eq('id', jobId)
         .single()
         .then(({ data }: { data: JobInfo | null }) => setJob(data)),
       supabase
-        .from('translators')
-        .select('id, full_name, email, language_pairs, specialties, court_certified, medical_certified, does_consecutive, does_simultaneous')
+        .from('translation_translators')
+        .select('id, full_name, email, translation_language_pairs, specialties, court_certified, medical_certified, does_consecutive, does_simultaneous')
         .eq('is_active', true)
         .order('full_name')
         .then(({ data }) => setTranslators((data ?? []) as unknown as Translator[])),
@@ -74,20 +74,20 @@ export default function AssignPage() {
 
   const isInterpretation = job?.job_type === 'interpretation'
   const sortedTranslators = job
-    ? [...translators].sort((a, b) => matchScore(b, job) - matchScore(a, job))
-    : translators
+    ? [...translation_translators].sort((a, b) => matchScore(b, job) - matchScore(a, job))
+    : translation_translators
 
   async function handleAssign() {
     if (!selectedId) return alert('Please select a translator.')
     setSubmitting(true)
     setAssignError(null)
-    const res = await fetch(`/api/admin/jobs/${jobId}/assign`, {
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/assign`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ translatorId: selectedId, deadlineAt: deadline || undefined }),
     })
     if (res.ok) {
-      router.push(`/admin/jobs/${jobId}`)
+      router.push(`/admin/translation_jobs/${jobId}`)
     } else {
       const data = await res.json().catch(() => ({}))
       setAssignError(typeof data.error === 'string' ? data.error : 'Assignment failed. Check server logs.')
@@ -98,7 +98,7 @@ export default function AssignPage() {
   return (
     <div className="p-8 max-w-xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href={`/admin/jobs/${jobId}`} className="text-gray-400 hover:text-gray-600">
+        <Link href={`/admin/translation_jobs/${jobId}`} className="text-gray-400 hover:text-gray-600">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="text-xl font-bold text-[#1a1a2e]">
@@ -145,9 +145,9 @@ export default function AssignPage() {
                       )}
                     </div>
                     <p className="text-xs text-gray-400">{t.email}</p>
-                    {t.language_pairs?.length > 0 && (
+                    {t.translation_language_pairs?.length > 0 && (
                       <p className="text-xs text-gray-400 mt-0.5">
-                        {t.language_pairs.slice(0, 4).join(', ')}{t.language_pairs.length > 4 ? '…' : ''}
+                        {t.translation_language_pairs.slice(0, 4).join(', ')}{t.translation_language_pairs.length > 4 ? '…' : ''}
                       </p>
                     )}
                     <div className="flex flex-wrap gap-1 mt-1">
@@ -160,10 +160,10 @@ export default function AssignPage() {
                 </label>
               )
             })}
-            {translators.length === 0 && (
+            {translation_translators.length === 0 && (
               <p className="text-sm text-gray-400">
-                No active {isInterpretation ? 'interpreters' : 'translators'} found.{' '}
-                <Link href="/admin/translators/new" className="text-blue-600 hover:underline">Add one.</Link>
+                No active {isInterpretation ? 'interpreters' : 'translation_translators'} found.{' '}
+                <Link href="/admin/translation_translators/new" className="text-blue-600 hover:underline">Add one.</Link>
               </p>
             )}
           </div>

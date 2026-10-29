@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data, error } = await service
-    .from('language_pairs')
+    .from('translation_language_pairs')
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
@@ -38,7 +38,7 @@ export async function DELETE(_req: NextRequest, { params }: Props) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const service = createServiceClient()
-  const { error } = await service.from('language_pairs').delete().eq('id', id)
+  const { error } = await service.from('translation_language_pairs').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return new NextResponse(null, { status: 204 })
 }

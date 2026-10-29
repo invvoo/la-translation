@@ -19,8 +19,8 @@ export async function POST(req: NextRequest, { params }: Props) {
 
     const supabase = createServiceClient()
     const { data: job } = await supabase
-      .from('jobs')
-      .select('id, job_type, status, source_lang, target_lang, quote_amount, quote_adjusted_amount, clients(contact_name, email, stripe_customer_id)')
+      .from('translation_jobs')
+      .select('id, job_type, status, source_lang, target_lang, quote_amount, quote_adjusted_amount, translation_clients(contact_name, email, stripe_customer_id)')
       .eq('id', payload.jobId)
       .single() as any
 
@@ -30,11 +30,11 @@ export async function POST(req: NextRequest, { params }: Props) {
       return NextResponse.json({ error: 'Quote is not in an acceptable state' }, { status: 409 })
     }
 
-    const client = job.clients as any
+    const client = job.translation_clients as any
 
     // Apply discount if set
     const { data: jobFull } = await supabase
-      .from('jobs')
+      .from('translation_jobs')
       .select('discount_amount, discount_label')
       .eq('id', payload.jobId)
       .single() as any
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     if (!stripeCustomerId && client?.email) {
       const customer = await getStripe().customers.create({ name: client.contact_name, email: client.email })
       stripeCustomerId = customer.id
-      await supabase.from('clients').update({ stripe_customer_id: stripeCustomerId }).eq('email', client.email)
+      await supabase.from('translation_clients').update({ stripe_customer_id: stripeCustomerId }).eq('email', client.email)
     }
 
     const serviceLabel = job.source_lang && job.target_lang
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest, { params }: Props) {
         console.log('[quote/accept] stale Stripe customer ID detected — creating fresh customer')
         const newCustomer = await getStripe().customers.create({ name: client.contact_name, email: client.email })
         stripeCustomerId = newCustomer.id
-        await supabase.from('clients').update({ stripe_customer_id: stripeCustomerId }).eq('email', client.email)
+        await supabase.from('translation_clients').update({ stripe_customer_id: stripeCustomerId }).eq('email', client.email)
         session = await getStripe().checkout.sessions.create({ ...sessionParams, customer: stripeCustomerId, customer_email: undefined })
       } else {
         throw stripeErr
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest, { params }: Props) {
 
     // Mark quote as accepted
     await supabase
-      .from('jobs')
+      .from('translation_jobs')
       .update({ status: 'quote_accepted', quote_accepted_at: new Date().toISOString() })
       .eq('id', job.id)
 

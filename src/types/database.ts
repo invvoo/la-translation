@@ -6,7 +6,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
-      language_pairs: {
+      translation_language_pairs: {
         Row: {
           id: string
           source_lang: string
@@ -36,7 +36,7 @@ export type Database = {
         }
         Relationships: []
       }
-      specialty_multipliers: {
+      translation_specialty_multipliers: {
         Row: {
           id: string
           name: string
@@ -63,7 +63,7 @@ export type Database = {
         }
         Relationships: []
       }
-      equipment_items: {
+      translation_equipment_items: {
         Row: {
           id: string
           name: string
@@ -102,7 +102,7 @@ export type Database = {
         }
         Relationships: []
       }
-      system_settings: {
+      translation_system_settings: {
         Row: {
           id: string
           key: string
@@ -129,7 +129,7 @@ export type Database = {
         }
         Relationships: []
       }
-      clients: {
+      translation_clients: {
         Row: {
           id: string
           contact_name: string
@@ -165,7 +165,7 @@ export type Database = {
         }
         Relationships: []
       }
-      employees: {
+      translation_employees: {
         Row: {
           id: string
           full_name: string
@@ -189,13 +189,13 @@ export type Database = {
         }
         Relationships: []
       }
-      translators: {
+      translation_translators: {
         Row: {
           id: string
           full_name: string
           email: string
           phone: string | null
-          language_pairs: string[]
+          translation_language_pairs: string[]
           specialties: string[]
           stripe_connect_id: string | null
           stripe_connect_status: 'pending' | 'active' | 'restricted' | null
@@ -209,7 +209,7 @@ export type Database = {
           full_name: string
           email: string
           phone?: string | null
-          language_pairs?: string[]
+          translation_language_pairs?: string[]
           specialties?: string[]
           stripe_connect_id?: string | null
           stripe_connect_status?: 'pending' | 'active' | 'restricted' | null
@@ -223,7 +223,7 @@ export type Database = {
           full_name?: string
           email?: string
           phone?: string | null
-          language_pairs?: string[]
+          translation_language_pairs?: string[]
           specialties?: string[]
           stripe_connect_id?: string | null
           stripe_connect_status?: 'pending' | 'active' | 'restricted' | null
@@ -234,7 +234,7 @@ export type Database = {
         }
         Relationships: []
       }
-      jobs: {
+      translation_jobs: {
         Row: {
           id: string
           job_type: 'translation' | 'interpretation' | 'equipment_rental' | 'notary'
@@ -420,7 +420,7 @@ export type Database = {
         }
         Relationships: []
       }
-      job_status_history: {
+      translation_job_status_history: {
         Row: {
           id: string
           job_id: string
@@ -450,7 +450,7 @@ export type Database = {
         }
         Relationships: []
       }
-      translator_invoices: {
+      translation_translator_invoices: {
         Row: {
           id: string
           job_id: string
@@ -507,7 +507,7 @@ export type Database = {
         }
         Relationships: []
       }
-      email_log: {
+      translation_email_log: {
         Row: {
           id: string
           job_id: string | null

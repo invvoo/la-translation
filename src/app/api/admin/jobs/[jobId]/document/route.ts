@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data: job } = await service
-    .from('jobs')
+    .from('translation_jobs')
     .select('document_path, document_name, ai_draft_path, translated_doc_path, document_paths')
     .eq('id', jobId)
     .single() as unknown as {

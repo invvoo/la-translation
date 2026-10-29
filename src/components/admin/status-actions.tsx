@@ -67,7 +67,7 @@ export function StatusActions({ jobId, jobType, status }: { jobId: string; jobTy
 
   async function submit(newStatus: string, appointmentAt?: string) {
     setLoading(true)
-    await fetch(`/api/admin/jobs/${jobId}/status`, {
+    await fetch(`/api/admin/translation_jobs/${jobId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus, appointmentAt }),

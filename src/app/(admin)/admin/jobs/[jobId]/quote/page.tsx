@@ -33,8 +33,8 @@ export default function QuoteReviewPage() {
   useEffect(() => {
     const supabase = createClient()
     supabase
-      .from('jobs')
-      .select('id, job_type, status, source_lang, target_lang, word_count, quote_amount, quote_adjusted_amount, quote_per_word_rate, quote_multiplier, employee_notes, clients(contact_name, email), specialty_multipliers:specialty_id(name)')
+      .from('translation_jobs')
+      .select('id, job_type, status, source_lang, target_lang, word_count, quote_amount, quote_adjusted_amount, quote_per_word_rate, quote_multiplier, employee_notes, translation_clients(contact_name, email), translation_specialty_multipliers:specialty_id(name)')
       .eq('id', jobId)
       .single()
       .then(({ data: rawData }) => {
@@ -73,7 +73,7 @@ export default function QuoteReviewPage() {
       return false
     }
     setSaving(true)
-    const res = await fetch(`/api/admin/jobs/${jobId}/quote`, {
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/quote`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -100,7 +100,7 @@ export default function QuoteReviewPage() {
       setSendError('Please set a quote amount greater than $0 before sending.')
       return
     }
-    const client = job?.clients as any
+    const client = job?.translation_clients as any
     if (!confirm(`Send quote for ${formatCurrency(amount)} to ${client?.email}?`)) return
 
     setSending(true)
@@ -114,9 +114,9 @@ export default function QuoteReviewPage() {
       return
     }
 
-    const res = await fetch(`/api/admin/jobs/${jobId}/quote`, { method: 'POST' })
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/quote`, { method: 'POST' })
     if (res.ok) {
-      router.push(`/admin/jobs/${jobId}`)
+      router.push(`/admin/translation_jobs/${jobId}`)
     } else {
       const body = await res.json().catch(() => ({}))
       setSendError(body.error ?? `Server error (${res.status})`)
@@ -126,15 +126,15 @@ export default function QuoteReviewPage() {
 
   if (!job) return <div className="p-8 text-gray-400">Loading…</div>
 
-  const client = job.clients as any
-  const specialty = job.specialty_multipliers as any
+  const client = job.translation_clients as any
+  const specialty = job.translation_specialty_multipliers as any
   const isTranslation = job.job_type === 'translation'
   const canRecalc = isTranslation && wordCount && perWordRate
 
   return (
     <div className="p-8 max-w-2xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href={`/admin/jobs/${jobId}`} className="text-gray-400 hover:text-gray-600">
+        <Link href={`/admin/translation_jobs/${jobId}`} className="text-gray-400 hover:text-gray-600">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="text-xl font-bold text-[#1a1a2e]">Review &amp; Send Quote</h1>

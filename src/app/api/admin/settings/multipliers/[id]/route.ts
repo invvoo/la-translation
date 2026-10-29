@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data, error } = await service
-    .from('specialty_multipliers')
+    .from('translation_specialty_multipliers')
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()

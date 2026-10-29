@@ -14,7 +14,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data: translator } = await service
-    .from('translators')
+    .from('translation_translators')
     .select('id, full_name, email, stripe_connect_id')
     .eq('id', translatorId)
     .single()
@@ -31,7 +31,7 @@ export async function POST(_req: NextRequest, { params }: Props) {
     })
     accountId = account.id
 
-    await service.from('translators').update({
+    await service.from('translation_translators').update({
       stripe_connect_id: accountId,
       stripe_connect_status: 'pending',
     }).eq('id', translatorId)
@@ -39,8 +39,8 @@ export async function POST(_req: NextRequest, { params }: Props) {
 
   const link = await getStripe().accountLinks.create({
     account: accountId,
-    refresh_url: `${process.env.NEXT_PUBLIC_SITE_URL}/admin/translators/${translatorId}`,
-    return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/admin/translators/${translatorId}`,
+    refresh_url: `${process.env.NEXT_PUBLIC_SITE_URL}/admin/translation_translators/${translatorId}`,
+    return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/admin/translation_translators/${translatorId}`,
     type: 'account_onboarding',
   })
 

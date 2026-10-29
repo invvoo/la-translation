@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   // Check for existing record
   const { data: existing } = await service
-    .from('translators')
+    .from('translation_translators')
     .select('id, is_active')
     .eq('email', email)
     .maybeSingle()
@@ -61,13 +61,13 @@ export async function POST(req: NextRequest) {
   }
 
   const { error } = await service
-    .from('translators')
+    .from('translation_translators')
     .insert({
       full_name: fullName,
       email,
       phone: phone ?? null,
       vendor_type: vendorType,
-      language_pairs: langPairsArray,
+      translation_language_pairs: langPairsArray,
       specialties: specialties ?? [],
       certifications: certifications ?? [],
       per_word_rate: perWordRate ?? null,
@@ -154,7 +154,7 @@ async function notifyAdminNewVendorApplication(params: {
   ].filter(Boolean).join('\n')
 
   const adminUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
-  const link = adminUrl ? `${adminUrl}/admin/translators` : ''
+  const link = adminUrl ? `${adminUrl}/admin/translation_translators` : ''
 
   await getResend().emails.send({
     from: FROM_EMAIL,

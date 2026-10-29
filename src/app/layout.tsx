@@ -15,7 +15,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: 'L.A. Translation & Interpretation',
-  description: 'Professional certified translation, interpretation, equipment rental, and notary/apostille services in Los Angeles. 200+ languages, 2,000+ certified professionals, serving clients since 2003.',
+  description: 'Professional certified translation, interpretation, equipment rental, and notary/apostille services in Los Angeles. 200+ languages, 2,000+ certified professionals, serving translation_clients since 2003.',
   keywords: 'translation services Los Angeles, certified translation, court interpreter, medical interpreter, apostille, USCIS translation, simultaneous interpretation equipment',
   authors: [{ name: 'L.A. Translation & Interpretation' }],
   openGraph: {

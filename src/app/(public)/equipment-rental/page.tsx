@@ -22,7 +22,7 @@ export default function EquipmentRentalPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    createClient().from('equipment_items').select('*').eq('is_active', true).order('name')
+    createClient().from('translation_equipment_items').select('*').eq('is_active', true).order('name')
       .then(({ data }) => setItems(data ?? []))
   }, [])
 
@@ -61,7 +61,7 @@ export default function EquipmentRentalPage() {
       return { itemId, name: item.name, qty, ratePerDay: Number(item.rate_per_day) }
     })
 
-    const res = await fetch('/api/jobs/equipment-rental', {
+    const res = await fetch('/api/translation_jobs/equipment-rental', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

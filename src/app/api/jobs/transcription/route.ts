@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
   // Upsert client
   const { data: client, error: clientError } = await supabase
-    .from('clients')
+    .from('translation_clients')
     .upsert(
       { contact_name: clientName, email: clientEmail, phone: clientPhone ?? null, company_name: clientCompany ?? null },
       { onConflict: 'email', ignoreDuplicates: false }
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   // Create job
   const { data: job, error: jobError } = await supabase
-    .from('jobs')
+    .from('translation_jobs')
     .insert({
       job_type: 'transcription',
       status: 'draft',
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create job', detail: jobError?.message ?? null }, { status: 500 })
   }
 
-  await supabase.from('job_status_history').insert({ job_id: job.id, new_status: 'draft' })
+  await supabase.from('translation_job_status_history').insert({ job_id: job.id, new_status: 'draft' })
 
   notifyAdminNewInquiry({
     jobType: 'transcription',

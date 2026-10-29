@@ -13,17 +13,17 @@ interface Props {
   jobId: string
   currentUserId: string
   handler: Employee | null
-  employees: Employee[]
+  translation_employees: Employee[]
 }
 
-export function ClaimJobButton({ jobId, currentUserId, handler, employees }: Props) {
+export function ClaimJobButton({ jobId, currentUserId, handler, translation_employees }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
 
   async function setHandler(employeeId: string | null) {
     setOpen(false)
-    await fetch(`/api/admin/jobs/${jobId}/handler`, {
+    await fetch(`/api/admin/translation_jobs/${jobId}/handler`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ employeeId }),
@@ -42,7 +42,7 @@ export function ClaimJobButton({ jobId, currentUserId, handler, employees }: Pro
             <UserPlus className="h-3.5 w-3.5" />
             Claim
           </Button>
-          {employees.length > 1 && (
+          {translation_employees.length > 1 && (
             <Button size="sm" variant="outline" onClick={() => setOpen(!open)} disabled={pending}>
               Assign <ChevronDown className="h-3 w-3 ml-0.5" />
             </Button>
@@ -73,7 +73,7 @@ export function ClaimJobButton({ jobId, currentUserId, handler, employees }: Pro
                 <UserPlus className="h-3.5 w-3.5" /> Claim for myself
               </button>
             )}
-            {employees.filter(e => e.id !== currentUserId).map(emp => (
+            {translation_employees.filter(e => e.id !== currentUserId).map(emp => (
               <button
                 key={emp.id}
                 className={cn('w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2', handler?.id === emp.id && 'bg-gray-50 font-medium')}

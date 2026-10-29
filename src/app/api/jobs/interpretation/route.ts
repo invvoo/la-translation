@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const supabase = createServiceClient()
 
   const { data: client, error: clientError } = await supabase
-    .from('clients')
+    .from('translation_clients')
     .upsert({ contact_name: clientName, email: clientEmail, phone: clientPhone ?? null, company_name: clientCompany ?? null }, { onConflict: 'email', ignoreDuplicates: false })
     .select('id')
     .single()
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
   const quote = await calculateInterpretationQuote(locationType, durationMinutes, supabase)
 
   const { data: job, error: jobError } = await supabase
-    .from('jobs')
+    .from('translation_jobs')
     .insert({
       job_type: 'interpretation',
       status: 'draft',
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
 
   if (jobError || !job) return NextResponse.json({ error: 'Failed to create job' }, { status: 500 })
 
-  await supabase.from('job_status_history').insert({ job_id: job.id, new_status: 'draft' })
+  await supabase.from('translation_job_status_history').insert({ job_id: job.id, new_status: 'draft' })
 
   // Send auto-quote email — failure does not fail the job creation
   try {

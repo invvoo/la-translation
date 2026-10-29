@@ -13,7 +13,7 @@ interface VendorJob {
   target_lang: string | null; word_count: number | null; invoice_number: string | null
   deadline_at: string | null; assigned_at: string | null; created_at: string
   document_name: string | null; document_path: string | null; ai_draft_path: string | null
-  translated_doc_path: string | null; clients: { contact_name: string } | null
+  translated_doc_path: string | null; translation_clients: { contact_name: string } | null
   vendor_confirmed_rate: number | null; vendor_accepted_at: string | null
   vendor_overtime_requested: boolean | null; translator_acceptance_token: string | null
 }
@@ -42,9 +42,9 @@ export default function VendorJobDetailPage() {
   const [overtimeNotes, setOvertimeNotes] = useState('')
 
   useEffect(() => {
-    fetch('/api/vendor/jobs').then(async (r) => {
+    fetch('/api/vendor/translation_jobs').then(async (r) => {
       const d = await r.json()
-      const found = (d.jobs ?? []).find((j: VendorJob) => j.id === jobId)
+      const found = (d.translation_jobs ?? []).find((j: VendorJob) => j.id === jobId)
       setJob(found ?? null)
       // Pre-fill invoice amount from confirmed rate
       if (found?.vendor_confirmed_rate != null) {
@@ -52,7 +52,7 @@ export default function VendorJobDetailPage() {
       }
       setLoading(false)
     })
-    fetch(`/api/vendor/jobs/${jobId}/invoice-status`).then(async (r) => {
+    fetch(`/api/vendor/translation_jobs/${jobId}/invoice-status`).then(async (r) => {
       if (r.ok) {
         const d = await r.json()
         if (d.invoice) setInvoice(d.invoice)
@@ -67,7 +67,7 @@ export default function VendorJobDetailPage() {
     setUploadError(null)
     const form = new FormData()
     form.append('file', file)
-    const res = await fetch(`/api/vendor/jobs/${jobId}/submit`, { method: 'POST', body: form })
+    const res = await fetch(`/api/vendor/translation_jobs/${jobId}/submit`, { method: 'POST', body: form })
     const data = await res.json().catch(() => ({}))
     setUploading(false)
     if (res.ok) {
@@ -84,7 +84,7 @@ export default function VendorJobDetailPage() {
     if (isNaN(amount) || amount <= 0) { setInvoiceError('Enter a valid amount.'); return }
     setInvoiceSubmitting(true)
     setInvoiceError(null)
-    const res = await fetch(`/api/vendor/jobs/${jobId}/invoice`, {
+    const res = await fetch(`/api/vendor/translation_jobs/${jobId}/invoice`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -108,7 +108,7 @@ export default function VendorJobDetailPage() {
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <p className="text-gray-500 mb-3">Job not found.</p>
-        <Link href="/vendor/jobs" className="text-[#1a1a2e] underline text-sm">Back to jobs</Link>
+        <Link href="/vendor/translation_jobs" className="text-[#1a1a2e] underline text-sm">Back to translation_jobs</Link>
       </div>
     </div>
   )
@@ -127,7 +127,7 @@ export default function VendorJobDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Link href="/vendor/jobs" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="h-5 w-5" /></Link>
+          <Link href="/vendor/translation_jobs" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="h-5 w-5" /></Link>
           <span className="font-semibold text-[#1a1a2e]">Job Detail</span>
         </div>
       </header>
@@ -194,7 +194,7 @@ export default function VendorJobDetailPage() {
           <div className="space-y-3">
             {job.document_path && (
               <a
-                href={`/api/admin/jobs/${jobId}/document`}
+                href={`/api/admin/translation_jobs/${jobId}/document`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-sm"
@@ -209,7 +209,7 @@ export default function VendorJobDetailPage() {
             )}
             {job.ai_draft_path && (
               <a
-                href={`/api/admin/jobs/${jobId}/document?type=draft`}
+                href={`/api/admin/translation_jobs/${jobId}/document?type=draft`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-3 p-3 rounded-lg border border-purple-100 bg-purple-50 hover:bg-purple-100 transition-all text-sm"

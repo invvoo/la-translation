@@ -23,8 +23,8 @@ export function JobFinalActions({ jobId, status, adminName, jobType }: Props) {
 
   async function deleteJob() {
     setLoading(true)
-    await fetch(`/api/admin/jobs/${jobId}`, { method: 'DELETE' })
-    window.location.href = '/admin/jobs'
+    await fetch(`/api/admin/translation_jobs/${jobId}`, { method: 'DELETE' })
+    window.location.href = '/admin/translation_jobs'
   }
 
   if (confirming) {

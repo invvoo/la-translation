@@ -25,29 +25,29 @@ export async function POST(req: NextRequest, { params }: Props) {
   const supabase = createServiceClient()
 
   const { data: job } = await (supabase as any)
-    .from('jobs')
-    .select('*, specialty_multipliers:specialty_id(name), clients(contact_name, email)')
+    .from('translation_jobs')
+    .select('*, translation_specialty_multipliers:specialty_id(name), translation_clients(contact_name, email)')
     .eq('id', jobId)
     .single()
 
   if (!job) return NextResponse.json({ error: 'Job not found' }, { status: 404 })
 
-  const { data: translators } = await supabase
-    .from('translators')
+  const { data: translation_translators } = await supabase
+    .from('translation_translators')
     .select('id, full_name, email')
     .in('id', parsed.data.translatorIds)
 
-  if (!translators?.length) return NextResponse.json({ error: 'No translators found' }, { status: 404 })
+  if (!translation_translators?.length) return NextResponse.json({ error: 'No translation_translators found' }, { status: 404 })
 
-  const specialty = (job.specialty_multipliers as any)?.name ?? 'General'
+  const specialty = (job.translation_specialty_multipliers as any)?.name ?? 'General'
   const contacted: { name: string; email: string }[] = []
 
-  for (const translator of translators) {
+  for (const translator of translation_translators) {
     try {
       // Upsert a bid record so we can track the response
       const token = crypto.randomBytes(32).toString('hex')
       const { data: existingBid } = await (supabase as any)
-        .from('interpreter_bids')
+        .from('translation_interpreter_bids')
         .select('id, token')
         .eq('job_id', jobId)
         .eq('translator_id', translator.id)
@@ -57,13 +57,13 @@ export async function POST(req: NextRequest, { params }: Props) {
       if (existingBid) {
         // Re-send: keep existing token so old links still work; reset to pending
         bidToken = existingBid.token
-        await (supabase as any).from('interpreter_bids').update({
+        await (supabase as any).from('translation_interpreter_bids').update({
           status: 'pending',
           responded_at: null,
           updated_at: new Date().toISOString(),
         }).eq('id', existingBid.id)
       } else {
-        await (supabase as any).from('interpreter_bids').insert({
+        await (supabase as any).from('translation_interpreter_bids').insert({
           job_id: jobId,
           translator_id: translator.id,
           token: bidToken,
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest, { params }: Props) {
         html,
       })
 
-      await supabase.from('email_log').insert({
+      await supabase.from('translation_email_log').insert({
         job_id: jobId,
         email_type: 'translator_inquiry',
         recipient: translator.email,
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   }
 
   if (contacted.length > 0) {
-    await supabase.from('job_status_history').insert({
+    await supabase.from('translation_job_status_history').insert({
       job_id: jobId,
       old_status: job.status,
       new_status: job.status,

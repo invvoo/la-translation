@@ -45,14 +45,14 @@ const PAYMENT_DETAIL_LABEL: Record<string, string> = {
 }
 
 interface Profile {
-  full_name: string; phone: string; vendor_type: string; language_pairs: string[]
+  full_name: string; phone: string; vendor_type: string; translation_language_pairs: string[]
   specialties: string[]; certifications: string[]; per_word_rate: number | null
   hourly_rate: number | null; notes: string; payment_method: string; payment_details: string
   address: string; city: string; state: string; zip: string; lat: number | null; lng: number | null
 }
 
 const empty: Profile = {
-  full_name: '', phone: '', vendor_type: 'translator', language_pairs: [], specialties: [],
+  full_name: '', phone: '', vendor_type: 'translator', translation_language_pairs: [], specialties: [],
   certifications: [], per_word_rate: null, hourly_rate: null, notes: '', payment_method: 'stripe',
   payment_details: '', address: '', city: '', state: '', zip: '', lat: null, lng: null,
 }
@@ -79,7 +79,7 @@ export default function VendorProfilePage() {
             full_name:      t.full_name ?? '',
             phone:          t.phone ?? '',
             vendor_type:    t.vendor_type ?? 'translator',
-            language_pairs: t.language_pairs ?? [],
+            translation_language_pairs: t.translation_language_pairs ?? [],
             specialties:    t.specialties ?? [],
             certifications: t.certifications ?? [],
             per_word_rate:  t.per_word_rate ?? null,
@@ -94,7 +94,7 @@ export default function VendorProfilePage() {
             lat:            t.lat ?? null,
             lng:            t.lng ?? null,
           })
-          setLangPairsStr((t.language_pairs ?? []).join(', '))
+          setLangPairsStr((t.translation_language_pairs ?? []).join(', '))
           setPerWordRateStr(t.per_word_rate != null ? String(t.per_word_rate) : '')
           setHourlyRateStr(t.hourly_rate != null ? String(t.hourly_rate) : '')
         }
@@ -126,7 +126,7 @@ export default function VendorProfilePage() {
       body: JSON.stringify({
         full_name:       profile.full_name,
         phone:           profile.phone || undefined,
-        language_pairs:  langs,
+        translation_language_pairs:  langs,
         specialties:     profile.specialties,
         certifications:  profile.certifications,
         per_word_rate:   perWordRateStr ? parseFloat(perWordRateStr) : null,
@@ -144,7 +144,7 @@ export default function VendorProfilePage() {
     setSaving(false)
     if (res.ok) {
       setSaved(true)
-      set('language_pairs', langs)
+      set('translation_language_pairs', langs)
     } else {
       setError(typeof data.error === 'string' ? data.error : 'Failed to save changes.')
     }
@@ -165,7 +165,7 @@ export default function VendorProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Link href="/vendor/jobs" className="text-gray-400 hover:text-gray-600">
+          <Link href="/vendor/translation_jobs" className="text-gray-400 hover:text-gray-600">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <span className="font-semibold text-[#1a1a2e]">My Profile</span>

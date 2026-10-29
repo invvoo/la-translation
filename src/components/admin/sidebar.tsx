@@ -12,9 +12,9 @@ import {
 
 const navItems = [
   { href: '/admin',                label: 'Dashboard',          icon: LayoutDashboard, exact: true },
-  { href: '/admin/jobs',           label: 'Jobs',               icon: Briefcase       },
-  { href: '/admin/clients',        label: 'Clients',            icon: Users           },
-  { href: '/admin/translators',    label: 'Translators',        icon: Languages       },
+  { href: '/admin/translation_jobs',           label: 'Jobs',               icon: Briefcase       },
+  { href: '/admin/translation_clients',        label: 'Clients',            icon: Users           },
+  { href: '/admin/translation_translators',    label: 'Translators',        icon: Languages       },
   { href: '/admin/equipment',      label: 'Equipment',          icon: Package         },
   { href: '/admin/invoices',       label: 'Invoices / Payouts', icon: Receipt         },
   { href: '/admin/settings/team',  label: 'Team',               icon: UsersRound      },

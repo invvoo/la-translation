@@ -22,7 +22,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   const service = createServiceClient()
 
   const { data: job } = await service
-    .from('jobs')
+    .from('translation_jobs')
     .select('id, source_lang, target_lang, scheduled_at, duration_minutes, location_type, location_details, assignment_type, interpretation_mode, interpretation_cert_required, interpreter_notes')
     .eq('id', jobId)
     .single() as any
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   if (!job) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { data: interpreters } = await service
-    .from('translators')
+    .from('translation_translators')
     .select('id, full_name, email')
     .in('id', interpreterIds)
     .eq('is_active', true)
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   for (const interpreter of interpreters) {
     // Upsert bid record — if already sent, reuse existing token
     const { data: existingBid } = await (service as any)
-      .from('interpreter_bids')
+      .from('translation_interpreter_bids')
       .select('id, token')
       .eq('job_id', jobId)
       .eq('translator_id', interpreter.id)
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest, { params }: Props) {
       token = existingBid.token
     } else {
       token = crypto.randomBytes(32).toString('hex')
-      await (service as any).from('interpreter_bids').insert({
+      await (service as any).from('translation_interpreter_bids').insert({
         job_id: jobId,
         translator_id: interpreter.id,
         token,
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest, { params }: Props) {
         html,
       })
 
-      await service.from('email_log').insert({
+      await service.from('translation_email_log').insert({
         job_id: jobId,
         email_type: 'interpreter_inquiry',
         recipient: interpreter.email,
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     }
   }
 
-  await service.from('job_status_history').insert({
+  await service.from('translation_job_status_history').insert({
     job_id: jobId,
     old_status: null,
     new_status: null,

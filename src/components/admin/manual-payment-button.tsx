@@ -40,7 +40,7 @@ export function ManualPaymentButton({ jobId, currentStatus, quoteAmount }: Props
   async function handleConfirm() {
     setLoading(true)
     setError(null)
-    const res = await fetch(`/api/admin/jobs/${jobId}/manual-payment`, {
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/manual-payment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

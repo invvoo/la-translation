@@ -95,11 +95,11 @@ export default function TranslationRequestPage() {
 
   useState(() => {
     const supabase = createClient()
-    supabase.from('language_pairs').select('id, source_lang, target_lang, per_word_rate').eq('is_active', true)
+    supabase.from('translation_language_pairs').select('id, source_lang, target_lang, per_word_rate').eq('is_active', true)
       .then(({ data }) => setLangPairs(data ?? []))
-    supabase.from('specialty_multipliers').select('name, multiplier').eq('is_active', true)
+    supabase.from('translation_specialty_multipliers').select('name, multiplier').eq('is_active', true)
       .then(({ data }) => setSpecialties(data ?? []))
-    supabase.from('system_settings').select('key, value')
+    supabase.from('translation_system_settings').select('key, value')
       .in('key', ['translation_minimum_standard','translation_minimum_certified','translation_minimum_court','translation_minimum_court_premium','translation_court_premium_langs'])
       .then(({ data }) => {
         if (!data) return
@@ -156,7 +156,7 @@ export default function TranslationRequestPage() {
     try {
       const fd = new FormData()
       fd.append('document', file)
-      const res = await fetch('/api/jobs/translation/detect', { method: 'POST', body: fd })
+      const res = await fetch('/api/translation_jobs/translation/detect', { method: 'POST', body: fd })
       const data = await res.json()
       const lang = data.language ?? 'Unknown'
       const conf = data.confidence ?? 0
@@ -180,7 +180,7 @@ export default function TranslationRequestPage() {
   async function uploadFile(file: File, listIndex: number) {
     try {
       // Get signed upload URL
-      const urlRes = await fetch('/api/jobs/translation/upload-url', {
+      const urlRes = await fetch('/api/translation_jobs/translation/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: file.name, contentType: file.type || 'application/octet-stream' }),
@@ -282,7 +282,7 @@ export default function TranslationRequestPage() {
 
     const storagePaths = uploadedFiles.map((uf) => ({ path: uf.storagePath!, name: uf.file.name }))
 
-    const res = await fetch('/api/jobs/translation', {
+    const res = await fetch('/api/translation_jobs/translation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -370,7 +370,7 @@ export default function TranslationRequestPage() {
         {/* Trust banner */}
         <div className="flex items-center gap-2 text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-4 py-2.5 mb-6">
           <Building2 className="h-3.5 w-3.5 text-[#1a1a2e] shrink-0" />
-          <span>A real local office — <strong>2975 Wilshire Blvd #205, Los Angeles</strong> — serving clients in person since 2003.</span>
+          <span>A real local office — <strong>2975 Wilshire Blvd #205, Los Angeles</strong> — serving translation_clients in person since 2003.</span>
         </div>
 
         <div className="text-center mb-8">

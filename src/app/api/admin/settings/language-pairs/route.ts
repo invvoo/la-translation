@@ -9,7 +9,7 @@ export async function GET() {
 
   const service = createServiceClient()
   const { data, error } = await service
-    .from('language_pairs')
+    .from('translation_language_pairs')
     .select('*')
     .order('source_lang')
     .order('target_lang')
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
   const { data, error } = await service
-    .from('language_pairs')
+    .from('translation_language_pairs')
     .insert(parsed.data)
     .select()
     .single()

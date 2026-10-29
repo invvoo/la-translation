@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
 
   const { status, note, appointmentAt, dispatchAt } = parsed.data
 
-  const { data: job } = await supabase.from('jobs').select('status').eq('id', jobId).single()
+  const { data: job } = await supabase.from('translation_jobs').select('status').eq('id', jobId).single()
   if (!job) return NextResponse.json({ error: 'Job not found' }, { status: 404 })
 
   const updates: Record<string, unknown> = { status }
@@ -35,12 +35,12 @@ export async function PATCH(req: NextRequest, { params }: Props) {
   if (status === 'returned') updates.return_at = new Date().toISOString()
   if (status === 'complete' || status === 'completed') updates.delivered_at = new Date().toISOString()
 
-  const { error } = await supabase.from('jobs').update(updates as any).eq('id', jobId)
+  const { error } = await supabase.from('translation_jobs').update(updates as any).eq('id', jobId)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await autoClaimJob(supabase as any, jobId, user.id)
 
-  await supabase.from('job_status_history').insert({
+  await supabase.from('translation_job_status_history').insert({
     job_id: jobId,
     old_status: job.status,
     new_status: status,

@@ -19,7 +19,7 @@ interface Props {
 export function TranslationWorkflowActions({ jobId, status, hasDocument, hasAiDraft, hasVendorSubmission, sourceLang, targetLang }: Props) {
   if (status === 'draft') {
     return (
-      <Link href={`/admin/jobs/${jobId}/quote`}>
+      <Link href={`/admin/translation_jobs/${jobId}/quote`}>
         <Button size="sm" className="bg-[#1a1a2e] hover:bg-[#2a2a4e]">
           <Send className="h-3.5 w-3.5 mr-1.5" /> Review &amp; Send Quote
         </Button>
@@ -29,7 +29,7 @@ export function TranslationWorkflowActions({ jobId, status, hasDocument, hasAiDr
 
   if (status === 'quote_sent') {
     return (
-      <Link href={`/admin/jobs/${jobId}/quote`}>
+      <Link href={`/admin/translation_jobs/${jobId}/quote`}>
         <Button size="sm" variant="outline">
           <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Resend / Edit Quote
         </Button>
@@ -58,10 +58,10 @@ export function TranslationWorkflowActions({ jobId, status, hasDocument, hasAiDr
           )}
           <div className="flex flex-col gap-1">
             <SendTranslatorInquiryButton jobId={jobId} sourceLang={sourceLang} targetLang={targetLang} />
-            <p className="text-[10px] text-gray-400 pl-1">Email translators to confirm availability</p>
+            <p className="text-[10px] text-gray-400 pl-1">Email translation_translators to confirm availability</p>
           </div>
           <div className="flex flex-col gap-1">
-            <Link href={`/admin/jobs/${jobId}/assign`}>
+            <Link href={`/admin/translation_jobs/${jobId}/assign`}>
               <Button size="sm" variant="outline">
                 <UserPlus className="h-3.5 w-3.5 mr-1.5" /> Assign Directly
               </Button>
@@ -85,19 +85,19 @@ export function TranslationWorkflowActions({ jobId, status, hasDocument, hasAiDr
     return (
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap gap-2">
-          <Link href={`/admin/jobs/${jobId}/assign`}>
+          <Link href={`/admin/translation_jobs/${jobId}/assign`}>
             <Button size="sm" className="bg-[#1a1a2e] hover:bg-[#2a2a4e]">
               <UserPlus className="h-3.5 w-3.5 mr-1.5" /> Assign External Translator
             </Button>
           </Link>
           {hasAiDraft && (
-            <a href={`/api/admin/jobs/${jobId}/document?type=draft`} target="_blank" rel="noopener noreferrer">
+            <a href={`/api/admin/translation_jobs/${jobId}/document?type=draft`} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="border-purple-200 text-purple-700 hover:bg-purple-50">
                 <Sparkles className="h-3.5 w-3.5 mr-1" /> View AI Draft
               </Button>
             </a>
           )}
-          <Link href={`/admin/jobs/${jobId}/deliver`}>
+          <Link href={`/admin/translation_jobs/${jobId}/deliver`}>
             <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50">
               <Upload className="h-3.5 w-3.5 mr-1.5" /> Deliver to Client
             </Button>
@@ -118,12 +118,12 @@ export function TranslationWorkflowActions({ jobId, status, hasDocument, hasAiDr
       return (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-2">
-            <Link href={`/admin/jobs/${jobId}/review`}>
+            <Link href={`/admin/translation_jobs/${jobId}/review`}>
               <Button size="sm" className="bg-green-700 hover:bg-green-800">
                 <Eye className="h-3.5 w-3.5 mr-1.5" /> Review Submission
               </Button>
             </Link>
-            <Link href={`/admin/jobs/${jobId}/deliver`}>
+            <Link href={`/admin/translation_jobs/${jobId}/deliver`}>
               <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50">
                 <Upload className="h-3.5 w-3.5 mr-1.5" /> Deliver to Client
               </Button>
@@ -145,7 +145,7 @@ export function TranslationWorkflowActions({ jobId, status, hasDocument, hasAiDr
             Translator assigned — awaiting submission
           </div>
           {(hasAiDraft || hasDocument) && (
-            <Link href={`/admin/jobs/${jobId}/deliver`}>
+            <Link href={`/admin/translation_jobs/${jobId}/deliver`}>
               <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50">
                 <Upload className="h-3.5 w-3.5 mr-1.5" /> Deliver to Client
               </Button>
@@ -167,12 +167,12 @@ export function TranslationWorkflowActions({ jobId, status, hasDocument, hasAiDr
       return (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-2">
-            <Link href={`/admin/jobs/${jobId}/review`}>
+            <Link href={`/admin/translation_jobs/${jobId}/review`}>
               <Button size="sm" className="bg-green-700 hover:bg-green-800">
                 <Eye className="h-3.5 w-3.5 mr-1.5" /> Review Submission
               </Button>
             </Link>
-            <Link href={`/admin/jobs/${jobId}/deliver`}>
+            <Link href={`/admin/translation_jobs/${jobId}/deliver`}>
               <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50">
                 <Upload className="h-3.5 w-3.5 mr-1.5" /> Deliver to Client
               </Button>
@@ -194,7 +194,7 @@ export function TranslationWorkflowActions({ jobId, status, hasDocument, hasAiDr
             Translation in progress — awaiting vendor submission
           </div>
           {(hasAiDraft || hasDocument) && (
-            <Link href={`/admin/jobs/${jobId}/deliver`}>
+            <Link href={`/admin/translation_jobs/${jobId}/deliver`}>
               <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50">
                 <Upload className="h-3.5 w-3.5 mr-1.5" /> Deliver to Client
               </Button>

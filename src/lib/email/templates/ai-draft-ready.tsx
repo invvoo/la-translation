@@ -17,7 +17,7 @@ export function AiDraftReadyEmail({
   targetLang,
   wordCount,
 }: AiDraftReadyEmailProps) {
-  const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/admin/jobs/${jobId}/assign`
+  const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/admin/translation_jobs/${jobId}/assign`
 
   return (
     <Html>

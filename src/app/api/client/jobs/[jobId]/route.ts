@@ -10,11 +10,11 @@ export async function GET(_req: NextRequest, { params }: Props) {
   if (!user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const service = createServiceClient()
-  const { data: client } = await service.from('clients').select('id').eq('email', user.email).maybeSingle()
+  const { data: client } = await service.from('translation_clients').select('id').eq('email', user.email).maybeSingle()
   if (!client) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { data: job } = await service
-    .from('jobs')
+    .from('translation_jobs')
     .select([
       'id, job_type, status, source_lang, target_lang, word_count',
       'quote_amount, quote_adjusted_amount, quote_per_word_rate, quote_multiplier, quote_is_pivot',
@@ -32,7 +32,7 @@ export async function GET(_req: NextRequest, { params }: Props) {
 
   // Fetch discount separately so it works regardless of whether types are regenerated
   const { data: discountRow } = await service
-    .from('jobs')
+    .from('translation_jobs')
     .select('discount_amount, discount_label')
     .eq('id', jobId)
     .single() as any

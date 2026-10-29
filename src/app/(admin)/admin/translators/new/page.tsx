@@ -45,11 +45,11 @@ export default function NewTranslatorPage() {
     setError(null)
     const pairs = langPairs.filter((p) => p.source && p.target).map((p) => `${p.source}→${p.target}`)
     const supabase = createClient()
-    const { error: err } = await supabase.from('translators').insert({
+    const { error: err } = await supabase.from('translation_translators').insert({
       full_name: form.full_name,
       email: form.email,
       phone: form.phone || null,
-      language_pairs: pairs,
+      translation_language_pairs: pairs,
       specialties,
       notes: form.notes || null,
       court_certified: courtCertified,
@@ -58,13 +58,13 @@ export default function NewTranslatorPage() {
       does_simultaneous: doesSimultaneous,
     } as any)
     if (err) { setError(err.message); setSubmitting(false) }
-    else { router.push('/admin/translators') }
+    else { router.push('/admin/translation_translators') }
   }
 
   return (
     <div className="p-8 max-w-2xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin/translators" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link href="/admin/translation_translators" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="h-5 w-5" /></Link>
         <h1 className="text-xl font-bold text-[#1a1a2e]">Add Translator / Interpreter</h1>
       </div>
 

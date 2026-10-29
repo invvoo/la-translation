@@ -9,7 +9,7 @@ interface Translator {
   id: string
   full_name: string
   email: string
-  language_pairs: string[]
+  translation_language_pairs: string[]
   isMatch?: boolean
 }
 
@@ -22,7 +22,7 @@ interface Props {
 export function SendTranslatorInquiryButton({ jobId, sourceLang, targetLang }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [translators, setTranslators] = useState<Translator[]>([])
+  const [translation_translators, setTranslators] = useState<Translator[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
@@ -30,15 +30,15 @@ export function SendTranslatorInquiryButton({ jobId, sourceLang, targetLang }: P
   const [sentNames, setSentNames] = useState<string[]>([])
 
   useEffect(() => {
-    if (!open || translators.length > 0) return
+    if (!open || translation_translators.length > 0) return
     setFetching(true)
-    fetch('/api/admin/translators')
+    fetch('/api/admin/translation_translators')
       .then((r) => r.json())
       .then((data) => {
-        const list: Translator[] = (data.translators ?? []).filter((t: any) => t.is_active !== false)
-        // Mark matching translators (handle language pair in either direction)
+        const list: Translator[] = (data.translation_translators ?? []).filter((t: any) => t.is_active !== false)
+        // Mark matching translation_translators (handle language pair in either direction)
         const enriched = list.map((t) => {
-          const pairs: string[] = t.language_pairs ?? []
+          const pairs: string[] = t.translation_language_pairs ?? []
           const isMatch = sourceLang && targetLang
             ? pairs.some((p) =>
                 p === `${sourceLang}→${targetLang}` ||
@@ -50,11 +50,11 @@ export function SendTranslatorInquiryButton({ jobId, sourceLang, targetLang }: P
         })
         enriched.sort((a, b) => (b.isMatch ? 1 : 0) - (a.isMatch ? 1 : 0))
         setTranslators(enriched)
-        // Pre-select matching translators
+        // Pre-select matching translation_translators
         setSelected(new Set(enriched.filter((t) => t.isMatch).map((t) => t.id)))
       })
       .finally(() => setFetching(false))
-  }, [open, sourceLang, targetLang, translators.length])
+  }, [open, sourceLang, targetLang, translation_translators.length])
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -67,7 +67,7 @@ export function SendTranslatorInquiryButton({ jobId, sourceLang, targetLang }: P
   async function send() {
     if (selected.size === 0) return
     setLoading(true)
-    const res = await fetch(`/api/admin/jobs/${jobId}/translator-inquiry`, {
+    const res = await fetch(`/api/admin/translation_jobs/${jobId}/translator-inquiry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ translatorIds: Array.from(selected) }),
@@ -106,17 +106,17 @@ export function SendTranslatorInquiryButton({ jobId, sourceLang, targetLang }: P
       {open && (
         <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm w-full max-w-sm">
           <p className="text-xs text-gray-500 mb-3">
-            Select translators to email. They will be asked to confirm availability and rate.
+            Select translation_translators to email. They will be asked to confirm availability and rate.
           </p>
 
           {fetching && <Loader2 className="h-4 w-4 animate-spin text-gray-400 mx-auto" />}
 
-          {!fetching && translators.length === 0 && (
-            <p className="text-xs text-gray-400">No active translators found.</p>
+          {!fetching && translation_translators.length === 0 && (
+            <p className="text-xs text-gray-400">No active translation_translators found.</p>
           )}
 
           <div className="space-y-1.5 max-h-56 overflow-y-auto mb-3">
-            {translators.map((t) => (
+            {translation_translators.map((t) => (
               <label key={t.id} className="flex items-center gap-2.5 text-sm cursor-pointer hover:bg-gray-50 rounded px-1 py-0.5">
                 <input
                   type="checkbox"

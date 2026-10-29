@@ -6,7 +6,7 @@ import { render as renderAsync } from '@react-email/components'
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? ''
 
-// ── GET /api/admin/employees — list all employees with their emails ────────────
+// ── GET /api/admin/translation_employees — list all translation_employees with their emails ────────────
 
 export async function GET() {
   const supabase = await createClient()
@@ -15,8 +15,8 @@ export async function GET() {
 
   const service = createServiceClient()
 
-  const { data: employees, error } = await service
-    .from('employees')
+  const { data: translation_employees, error } = await service
+    .from('translation_employees')
     .select('id, full_name, role, is_active, created_at')
     .order('created_at')
 
@@ -24,7 +24,7 @@ export async function GET() {
 
   // Enrich with email from auth.users
   const enriched = await Promise.all(
-    (employees ?? []).map(async (emp) => {
+    (translation_employees ?? []).map(async (emp) => {
       try {
         const { data: { user: authUser } } = await service.auth.admin.getUserById(emp.id)
         return { ...emp, email: authUser?.email ?? null }
@@ -37,7 +37,7 @@ export async function GET() {
   return NextResponse.json(enriched)
 }
 
-// ── POST /api/admin/employees — invite a new admin by email ──────────────────
+// ── POST /api/admin/translation_employees — invite a new admin by email ──────────────────
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   // Look up the invoking user's name to personalise the invite
   const service = createServiceClient()
   const { data: invoker } = await service
-    .from('employees')
+    .from('translation_employees')
     .select('full_name')
     .eq('id', user.id)
     .maybeSingle()
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     if (errMsg.toLowerCase().includes('already been registered') || errMsg.toLowerCase().includes('already exists')) {
       return NextResponse.json({ error: 'A user with this email already exists. Remove them from auth first if you want to re-invite.' }, { status: 409 })
     }
-    console.error('[employees/invite] generateLink error:', linkError)
+    console.error('[translation_employees/invite] generateLink error:', linkError)
     return NextResponse.json({ error: linkError.message }, { status: 500 })
   }
 
@@ -86,8 +86,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to generate invite link' }, { status: 500 })
   }
 
-  // Insert into employees immediately (they'll have access as soon as they accept)
-  const { error: insertError } = await service.from('employees').insert({
+  // Insert into translation_employees immediately (they'll have access as soon as they accept)
+  const { error: insertError } = await service.from('translation_employees').insert({
     id: newUserId,
     full_name: fullName,
     role,
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   })
 
   if (insertError && !insertError.message.includes('duplicate')) {
-    console.error('[employees/invite] insert error:', insertError)
+    console.error('[translation_employees/invite] insert error:', insertError)
     return NextResponse.json({ error: insertError.message }, { status: 500 })
   }
 
@@ -112,9 +112,9 @@ export async function POST(req: NextRequest) {
       subject: 'You\'ve been invited to the LA Translation admin portal',
       html,
     })
-    if (emailError) console.error('[employees/invite] email error:', emailError)
+    if (emailError) console.error('[translation_employees/invite] email error:', emailError)
   } catch (e) {
-    console.error('[employees/invite] email send failed:', e)
+    console.error('[translation_employees/invite] email send failed:', e)
   }
 
   return NextResponse.json({ ok: true, userId: newUserId })

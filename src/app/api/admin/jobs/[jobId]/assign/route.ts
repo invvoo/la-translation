@@ -17,10 +17,10 @@ async function generatePoNumber(service: ReturnType<typeof createServiceClient>)
   const today = new Date()
   const datePart = today.toISOString().slice(0, 10).replace(/-/g, '')
 
-  // Count jobs with PO numbers that start with today's prefix to get sequence
+  // Count translation_jobs with PO numbers that start with today's prefix to get sequence
   const prefix = `PO-${datePart}-`
   const { count } = await service
-    .from('jobs')
+    .from('translation_jobs')
     .select('id', { count: 'exact', head: true })
     .like('po_number', `${prefix}%`)
 
@@ -79,14 +79,14 @@ export async function POST(req: NextRequest, { params }: Props) {
 
   const service = createServiceClient()
   const { data: job } = await (service as any)
-    .from('jobs')
-    .select('status, job_type, invoice_number, word_count, source_lang, target_lang, document_path, ai_draft_path, scheduled_at, duration_minutes, location_type, location_details, interpreter_notes, interpretation_mode, interpretation_cert_required, clients(email, contact_name)')
+    .from('translation_jobs')
+    .select('status, job_type, invoice_number, word_count, source_lang, target_lang, document_path, ai_draft_path, scheduled_at, duration_minutes, location_type, location_details, interpreter_notes, interpretation_mode, interpretation_cert_required, translation_clients(email, contact_name)')
     .eq('id', jobId)
     .single()
   if (!job) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { data: translator } = await service
-    .from('translators')
+    .from('translation_translators')
     .select('id, full_name, email')
     .eq('id', translatorId)
     .single()
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   let vendorConfirmedRate: number | null = null
   if ((job as any).job_type === 'interpretation') {
     const { data: bid } = await (service as any)
-      .from('interpreter_bids')
+      .from('translation_interpreter_bids')
       .select('rate')
       .eq('job_id', jobId)
       .eq('translator_id', translatorId)
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest, { params }: Props) {
       .maybeSingle()
     if (bid?.rate != null) vendorConfirmedRate = Number(bid.rate)
     // Mark bid as assigned
-    await (service as any).from('interpreter_bids').update({ status: 'assigned', updated_at: new Date().toISOString() }).eq('job_id', jobId).eq('translator_id', translatorId)
+    await (service as any).from('translation_interpreter_bids').update({ status: 'assigned', updated_at: new Date().toISOString() }).eq('job_id', jobId).eq('translator_id', translatorId)
   }
 
   // For translation: generate acceptance token so translator confirms their rate
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     translatorAcceptanceToken = crypto.randomBytes(32).toString('hex')
   }
 
-  const { error: jobUpdateError } = await (service as any).from('jobs').update({
+  const { error: jobUpdateError } = await (service as any).from('translation_jobs').update({
     assigned_translator_id: translatorId,
     assigned_at: new Date().toISOString(),
     deadline_at: deadlineAt ?? null,
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     return NextResponse.json({ error: `Job update failed: ${jobUpdateError.message ?? JSON.stringify(jobUpdateError)}` }, { status: 500 })
   }
 
-  await service.from('job_status_history').insert({
+  await service.from('translation_job_status_history').insert({
     job_id: jobId,
     old_status: job.status,
     new_status: 'assigned',
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   await autoClaimJob(service, jobId, user.id)
 
   const isInterpretation = (job as any).job_type === 'interpretation'
-  const client = (job as any).clients as { email: string; contact_name: string } | null
+  const client = (job as any).translation_clients as { email: string; contact_name: string } | null
   const langLabel = (job as any).source_lang && (job as any).target_lang
     ? `${(job as any).source_lang} → ${(job as any).target_lang}`
     : 'Interpreting'
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest, { params }: Props) {
         adminEmail: 'info@latranslation.com',
         adminPhone: '(213) 385-7781',
         specialInstructions: (job as any).interpreter_notes ?? undefined,
-        jobPortalUrl: `${baseUrl}/vendor/jobs/${jobId}`,
+        jobPortalUrl: `${baseUrl}/vendor/translation_jobs/${jobId}`,
       }))
 
       // Build iCal attachment
@@ -188,7 +188,7 @@ export async function POST(req: NextRequest, { params }: Props) {
         icsContent = buildIcs({
           poNumber,
           summary: `Interpretation — ${langLabel}`,
-          description: `Client: ${client?.contact_name ?? 'TBD'}\nPO: ${poNumber}\nMode: ${(job as any).interpretation_mode ?? 'consecutive'}\nPortal: ${baseUrl}/vendor/jobs/${jobId}`,
+          description: `Client: ${client?.contact_name ?? 'TBD'}\nPO: ${poNumber}\nMode: ${(job as any).interpretation_mode ?? 'consecutive'}\nPortal: ${baseUrl}/vendor/translation_jobs/${jobId}`,
           location: (job as any).location_details ?? undefined,
           startAt: scheduledAt,
           endAt,
@@ -210,7 +210,7 @@ export async function POST(req: NextRequest, { params }: Props) {
 
       const { data: emailData, error: emailError } = await getResend().emails.send(emailPayload)
 
-      await service.from('email_log').insert({
+      await service.from('translation_email_log').insert({
         job_id: jobId,
         email_type: 'interpreter_assigned',
         recipient: translator.email,
@@ -230,9 +230,9 @@ export async function POST(req: NextRequest, { params }: Props) {
         wordCount: (job as any).word_count ?? undefined,
         deadlineAt: deadlineAt,
         invoiceNumber: (job as any).invoice_number ?? poNumber,
-        jobPortalUrl: `${baseUrl}/vendor/jobs/${jobId}`,
-        originalDocUrl: `${baseUrl}/api/admin/jobs/${jobId}/document`,
-        aiDraftUrl: (job as any).ai_draft_path ? `${baseUrl}/api/admin/jobs/${jobId}/document?type=draft` : undefined,
+        jobPortalUrl: `${baseUrl}/vendor/translation_jobs/${jobId}`,
+        originalDocUrl: `${baseUrl}/api/admin/translation_jobs/${jobId}/document`,
+        aiDraftUrl: (job as any).ai_draft_path ? `${baseUrl}/api/admin/translation_jobs/${jobId}/document?type=draft` : undefined,
         acceptanceUrl: translatorAcceptanceToken ? `${baseUrl}/vendor/translation-acceptance/${translatorAcceptanceToken}` : undefined,
       }))
 
@@ -243,7 +243,7 @@ export async function POST(req: NextRequest, { params }: Props) {
         html,
       })
 
-      await service.from('email_log').insert({
+      await service.from('translation_email_log').insert({
         job_id: jobId,
         email_type: 'translator_assigned',
         recipient: translator.email,

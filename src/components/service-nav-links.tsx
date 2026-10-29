@@ -8,9 +8,9 @@ const SERVICES = [
 ]
 
 const TRUST_LINES: Record<'translation' | 'interpretation' | 'notary', string> = {
-  translation:    'USCIS-accepted, court-certified, and notarized translations — sealed and stamped. Serving clients since 2003 from our Los Angeles office.',
-  interpretation: 'Court-certified and CCHI/National Board-certified medical interpreters. Serving clients since 2003 from our Los Angeles office.',
-  notary:         'Official notarization, apostille, and legal document assistance. Serving clients since 2003 from our Los Angeles office.',
+  translation:    'USCIS-accepted, court-certified, and notarized translations — sealed and stamped. Serving translation_clients since 2003 from our Los Angeles office.',
+  interpretation: 'Court-certified and CCHI/National Board-certified medical interpreters. Serving translation_clients since 2003 from our Los Angeles office.',
+  notary:         'Official notarization, apostille, and legal document assistance. Serving translation_clients since 2003 from our Los Angeles office.',
 }
 
 interface ServiceNavLinksProps {
