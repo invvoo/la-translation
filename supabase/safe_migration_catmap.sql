@@ -558,7 +558,6 @@ INSERT INTO translation_system_settings (key, value, description) VALUES
   ('notary_mobile_base_rate',             '80',       'Mobile notary base rate (within LA, low mileage)'),
   ('notary_mobile_max_rate',              '150',      'Mobile notary max rate (outer LA, high mileage)'),
   ('notary_per_signature',                '15',       'Per notary signature/stamp fee'),
-  ('translation_minimum_court',           '275',      'Minimum charge for court-certified translations'),
   ('ai_translation_rules',               '',          'Critical output rules for AI-translated documents')
 ON CONFLICT (key) DO UPDATE
   SET value = EXCLUDED.value, description = EXCLUDED.description;
